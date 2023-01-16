@@ -1,0 +1,11 @@
+# Windows putty shotcut Create
+
+putty_path=""                    # putty 경로
+user=""
+password=""
+ssh_ip=""
+ssh_port=""
+
+# 예시
+$putty_path/putty.exe -ssh -P $ssh_port $user@$ssh_ip -pw $password
+
