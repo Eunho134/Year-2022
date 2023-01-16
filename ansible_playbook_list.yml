@@ -136,6 +136,21 @@ $ cat copy_file.yml           # copy file to remote in local
 
 # 수행 명령어 ansible-playbook -i $inventory_path $playbook    
 
+$ cat gather_fact.yml         # gather_fact 로 Manage Node 수집
+---
+- name: play to gather and report
+  hosts: all
+  gather_facts: yes
+  tasks:
+    - name: Prnit information of distribution
+      debug:
+        msg: "{{ ansible_facts }}"
+
+# inventory_path=""           # inventory path
+# playbook=""                 # playbook yaml 파일 명
+
+# 수행 명령어 ansible-playbook -i $inventory_path $playbook    
+
 $ cat crontab_create.yml      # crontab config
 ---
 - name: Cron dalilyCheck job create
