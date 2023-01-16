@@ -135,28 +135,3 @@ $ cat copy_file.yml           # copy file to remote in local
 # playbook=""                 # playbook yaml 파일 명
 
 # 수행 명령어 ansible-playbook -i $inventory_path $playbook    
-
-$ cat crontab_create.yml      # crontab config
----
-- name: Cron dalilyCheck job create
-  hosts: all
-  gather_facts: false
-  tasks:
-  - name: download daily check script
-    copy:
-      src: /test/dailycheck.sh
-      dest: /root
-
-  - name: cron config
-    become: yes
-    cron:
-      job: sh /root/dailycheck.sh
-      month: "*"
-      day: "*"
-      hour: "*"
-      minute: "*/5"
-
-# inventory_path=""           # inventory path
-# playbook=""                 # playbook yaml 파일 명
-
-# 수행 명령어 ansible-playbook -i $inventory_path $playbook  
