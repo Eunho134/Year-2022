@@ -1,0 +1,217 @@
+# WAS Server Architecture
+
+# 설치 전 사전 준비
+yum update -y
+yum install -y wget
+
+# Open-JDK install
+# yum list java*jdk-devel       설치 할 수 있는 Openjdk 버전 확인
+
+yum install -y java-1.8.0-openjdk-devel.x86_64
+
+# java version 확인
+java -version
+
+# 서비스 기동시 사용할 tomcat 계정 생성
+useradd -d /usr/local/tomcat -M -s /sbin/nologin tomcat     # tomcat 이용 경로, ssh shell 로그인 차단
+
+# tomcat 홈페이지 tomcat.apache.org > Download > tomcat version 
+wget https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.84/bin/apache-tomcat-8.5.84.tar.gz -P /usr/local
+
+cd /usr/local/
+tar -zxvf apache-tomcat-8.5.84.tar.gz
+
+# 심볼릭 링크 생성
+ln -s apaache-tomcat-8.5.84 tomcat
+
+# 권한 설정
+chown -R tomcat:tomcat /usr/local/apache-tomcat-8.5.84
+chmod +x /usr/local/apache-tomcat=8.5.84/bin/*.sh
+
+# systemctl 서비스 등록
+cat <<EOF /etc/systemd/system/tomcat.service
+[Unit]
+Description=Apache Tomcat Service
+After=syslog.target network.target
+
+[Service]
+Type=forking
+
+Environment="JAVA_HOME=/usr/local/java"
+Environment="CATALINA_HOME=/usr/local/tomcat"
+Environment="CATALINA_BASE=/usr/local/tomcat"
+Environment="CATALINA_OPTS=Xms512M -Xms1024M -server -XX:+UseParallelGC"
+Environment="JAVA_OPTS=Djava.security.egd=file:///dev/urandom"
+
+ExecStart=/usr/local/tomcat/bin/startup.sh
+ExecStop=/usr/local/tomcat/bin/shutdowns.sh
+
+User=tomcat
+Group=tomcat
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# systemctl tomcat service 등록
+systemctl daemon-reload
+systemctl enable tomcat
+systemctl start tomcat
+
+# 환경변수 저장 
+cat <<EOF /etc/profile
+JAVA_HOME="/usr/local/java"
+CATALINA_HOME="/usr/local/tomcat"
+CLASSPATH=$JAVA_HOME/jre/lib:$JAVA_HOME/lib/tools.jar:$CATALINA_HOME/lib-jsp-api.jar:$CATALINA_HOME/lib/servlet-api.jar
+PATH=$PATH:$JAVA_HOME/bin:/bin:/sbin
+export JAVA_HOME PATH CLASSPATH CATALINA_HOME
+EOF
+
+# 환경변수 적용
+source /etc/profile
+
+# sed -i ‘s/[바꾸기전 문자열]/[변경 할 문자열]/g’ [파일이름]
+# 아래 내용 변경
+vi /usr/local/tomcat/conf/server.xml
+URIEncoding="UTF-8"
+
+# Apache httpd 설정
+# 사전 준비 및 MOD_JK 패키지 설치
+yum install -y httpd-devel gcc gcc-c++ autoconf libtool ca-certificates
+
+# yum info httpd    httpd 패키지 정보 확인
+yum install -y httpd
+
+# Apache httpd systemctl 등록
+systemctl daemon-reload
+systemctl enable httpd
+systemctl start httpd
+
+# tomcat-connectors_jk download 
+# tomcat 홈페이지 tomcat.apache.org > Download > tomcat connectors
+wget https://dlcdn.apache.org/tomcat/tomcat-connectors/jk/tomcat-connectors-1.2.48-src.tar.gz -P /usr/local/
+tar -zxvf /usr/local/tomcat-connectors-1.2.48-src
+cd /usr/local/tomcat-connectors-1.2.48-src/native
+./buildconf.sh;
+./configure --with-apxs=/bin/apxs;
+make && make install;
+
+# connector 설치 확인
+ll /usr/lib64/httpd/modules/mod_jk.so
+
+
+# Apache tomcat - Apache httpd 연동 준비
+# tomcat ajk 주석 해제 및 서비스 중단
+vi /usr/local/tomcat/conf/server.xml
+# "<--" 주석 처리 해제
+<Connector protocol="AJP/1.3" address="0.0.0.0" port="8009" redirectPort="8443" secretRequired="false" />
+systemctl stop Tomcat
+
+# jvmRoute instance 명 기입
+<Engine name="Catalina" defaultHost="localhost" jvmRoute="worker1">
+
+# Apache httpd - Apache tomcat 연동 준비
+# module jk 설정
+cat <<EOF /etc/httpd/conf.d/httpd.jk.conf
+LoadModule jk_module modules/mod_jk.so
+<IfModule jk_module>
+JkWorkersFile conf.d/workers.properties
+JkLogFile logs/mod_jk.log
+JkLogLevel info
+JkShmFile run/mod_jk.shm
+JkMountFile conf.d/uriworkermap.properties
+JkLogStampFormat "[%y %m %d %H:%M:%S] "
+</IfModule>
+EOF
+
+# worker properties 설정
+touch /etc/httpd/conf.d/workers.properties;
+
+cat <<EOF /etc/httpd/conf.d/workers.properties
+worker.list=balancer
+worker.worker1.port=8009
+worker.worker1.host=톰캣1_IP            # 단일 서버의 경우 localhost
+worker.worker1.type=ajp13
+worker.worker1.lbfactor=1
+
+# worker.worker2.port=8010              # 추가 tomcat 설정
+# worker.worker2.host=톰캣2_IP
+# worker.worker2.type=ajp13
+# worker.worker2.lbfactor=1
+
+worker.balancer.type=lb
+worker.balancer.balance_workers=worker1,worker2
+worker.balancer.sticky_session=TRUE
+EOF
+
+# workermap properties 설정
+touch /etc/httpd/conf.d/uriworkermap.properties;
+
+cat <<EOF /etc/httpd/conf.d/uriworkermap.properties
+/*=balancer
+EOF
+
+# DocumentRoot 설정 변경
+cat <<EOF /etc/httpd.conf
+<VirtualHost *:80>
+DocumentRoot "/usr/local/tomcat/webapps"
+JkMountFile conf.d/uriworkermap.properties
+</VirtualHost>
+EOF
+
+# 구문 오류 체크 후 재실행
+systemctl stop httpd
+apachectl configtest
+systemctl start httpd
+systemctl start tomcat
+
+# Maraidb 설치
+# os 버전 Maraidb 버전 선택  https://mariadb.org/download/?t=repo-config 
+
+# Maraidb yum 삭제
+yum list installed | grep mysql
+yum remove -y mysql-community-*
+
+# Mariadb package 삭제
+rpm -qa | grep mysql
+rpm -e "대상 패키지"
+
+# Mariadb repository 설정
+cat <<EOF /etc/yum.repos.d
+# MariaDB 10.8 CentOS repository list - created 2023-01-17 01:33 UTC
+# https://mariadb.org/download/
+[mariadb]
+name = MariaDB
+baseurl = https://mirrors.aliyun.com/mariadb/yum/10.8/centos7-amd64
+gpgkey=https://mirrors.aliyun.com/mariadb/yum/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+EOF
+
+yum install -y Mariadb-server Maraidb-client
+
+# version 확인
+mariadb --version
+
+# systemctl service 등록
+systemctl daemon-reload
+systemctl enable MariaDB
+systemctl start Maraidb
+
+# root 계정 변경
+mysqladmin -u root password '1234'
+
+# mysql 접속 후 계정 생성 및 권한 부여
+grant select, insert, update, delete, create on test.* to 'testuser'@'localhost' identified by '1234';
+grant select, insert, update, delete, create on test.* to 'testuser'@'%톰캣1_IP' identified by '1234';
+grant select, insert, update, delete, create on test.* to 'testuser'@'%톰캣2_IP' identified by '1234';
+flush privileges;
+
+# mysql 접속 후 테스트 페이지 database 설정
+connect test;
+create table test(id varchar(30), pwd varchar(30), name varchar(30), email varchar(30));
+
+# mysql connector 설치
+wget https://tw1.mirror.blendbyte.net/mariadb/connector-java-3.1.0/mariadb-java-client-3.1.0-sources.jar
+mv mariadb-java-client-3.1.0-sources.jar /usr/local/tomcat/lib/
+
+systemctl restart tomcat
