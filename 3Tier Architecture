@@ -207,7 +207,10 @@ connect test;
 create table test(id varchar(30), pwd varchar(30), name varchar(30), email varchar(30));
 
 # mysql connector 설치
-wget https://tw1.mirror.blendbyte.net/mariadb/connector-java-3.1.0/mariadb-java-client-3.1.0-sources.jar
-mv mariadb-java-client-3.1.0-sources.jar /usr/local/tomcat/lib/
+wget https://downloads.mysql.com/archives/get/p/3/file/mysql-connector-java-5.1.40.tar.gz -P /usr/local
+tar -zxvf /usr/local/mysql-connector-java-5.1.40.tar.gz
+
+cd /usr/local/mysql-connector-java-5.1.40
+mv mysql-connector-java-5.1.40-bin.jar /usr/local/tomcat/lib/
 
 systemctl restart tomcat
