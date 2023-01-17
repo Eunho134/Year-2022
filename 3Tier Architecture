@@ -28,6 +28,19 @@ ln -s apaache-tomcat-8.5.84 tomcat
 chown -R tomcat:tomcat /usr/local/apache-tomcat-8.5.84
 chmod +x /usr/local/apache-tomcat=8.5.84/bin/*.sh
 
+
+# 환경변수 저장 
+cat <<EOF /etc/profile
+JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.352.b08-2.el7_9.x86_64"
+CATALINA_HOME="/usr/local/tomcat"
+CLASSPATH=$JAVA_HOME/jre/lib:$JAVA_HOME/lib/tools.jar:$CATALINA_HOME/lib-jsp-api.jar:$CATALINA_HOME/lib/servlet-api.jar
+PATH=$PATH:$JAVA_HOME/bin:/bin:/sbin
+export JAVA_HOME PATH CLASSPATH CATALINA_HOME
+EOF
+
+# 환경변수 적용
+source /etc/profile
+
 # systemctl 서비스 등록
 cat <<EOF /etc/systemd/system/tomcat.service
 [Unit]
@@ -37,14 +50,14 @@ After=syslog.target network.target
 [Service]
 Type=forking
 
-Environment="JAVA_HOME=/usr/local/java"
+Environment="JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.352.b08-2.el7_9.x86_64"
 Environment="CATALINA_HOME=/usr/local/tomcat"
 Environment="CATALINA_BASE=/usr/local/tomcat"
-Environment="CATALINA_OPTS=Xms512M -Xms1024M -server -XX:+UseParallelGC"
-Environment="JAVA_OPTS=Djava.security.egd=file:///dev/urandom"
+Environment="CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC"
+Environment="JAVA_OPTS=-Djava.security.egd=file:///dev/urandom"
 
 ExecStart=/usr/local/tomcat/bin/startup.sh
-ExecStop=/usr/local/tomcat/bin/shutdowns.sh
+ExecStop=/usr/local/tomcat/bin/shutdown.sh
 
 User=tomcat
 Group=tomcat
@@ -57,23 +70,6 @@ EOF
 systemctl daemon-reload
 systemctl enable tomcat
 systemctl start tomcat
-
-# 환경변수 저장 
-cat <<EOF /etc/profile
-JAVA_HOME="/usr/local/java"
-CATALINA_HOME="/usr/local/tomcat"
-CLASSPATH=$JAVA_HOME/jre/lib:$JAVA_HOME/lib/tools.jar:$CATALINA_HOME/lib-jsp-api.jar:$CATALINA_HOME/lib/servlet-api.jar
-PATH=$PATH:$JAVA_HOME/bin:/bin:/sbin
-export JAVA_HOME PATH CLASSPATH CATALINA_HOME
-EOF
-
-# 환경변수 적용
-source /etc/profile
-
-# sed -i ‘s/[바꾸기전 문자열]/[변경 할 문자열]/g’ [파일이름]
-# 아래 내용 변경
-vi /usr/local/tomcat/conf/server.xml
-URIEncoding="UTF-8"
 
 # Apache httpd 설정
 # 사전 준비 및 MOD_JK 패키지 설치
@@ -177,7 +173,7 @@ rpm -qa | grep mysql
 rpm -e "대상 패키지"
 
 # Mariadb repository 설정
-cat <<EOF /etc/yum.repos.d
+cat <<EOF /etc/yum.repos.d/MariaDB.repo
 # MariaDB 10.8 CentOS repository list - created 2023-01-17 01:33 UTC
 # https://mariadb.org/download/
 [mariadb]
