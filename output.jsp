@@ -8,15 +8,15 @@
     response.setContentType("text/html;charset=utf-8;");
     request.setCharacterEncoding("utf-8"); //charset, Encoding 설정
     Class.forName("com.mysql.jdbc.Driver"); // load the drive
-    String DB_URL = "jdbc:mysql://Study_DB_IP:3306/test";                   # DB_IP 기입
+    String DB_URL = "jdbc:mysql://Study_DB_IP:3306/test";
 // 주의 : test by changing mydb to name that you make
-    String DB_USER = "testuser";                                            # DB 접속정보 기입
+    String DB_USER = "testuser";
     String DB_PASSWORD= "1234";
     Connection conn= null;
     Statement stmt = null;
     ResultSet rs = null;
 try {
-    conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);       # DB 접속정보 기입
+    conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     stmt = conn.createStatement();
     String query = "SELECT id, name, pwd, email FROM test";
     rs = stmt.executeQuery(query);
