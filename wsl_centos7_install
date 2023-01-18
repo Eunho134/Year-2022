@@ -1,0 +1,103 @@
+# Windows 기능 wsl 사용하기
+
+# Linux용 Widows 하위 시스템 설정
+# 관리자 권한으로 실행 cmd or powershell
+dism.exe /online /enalbe-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+
+# Linux 커널 최신 업데이트 
+# https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi Download 및 실행
+
+# 가상화 기능 설정
+# 관리자 권한으로 실행 cmd or powershell
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+
+# wsl2 설정
+wsl --set-default-version 2
+
+# Linux install
+# Ubuntu-18.04 > Microsoft Store 
+# Centos 7.9 > github.com/mishamosher/CentOS-WSL/releases/tag/7.9-2009
+
+# Centos 7.9 install 실행 및 wsl 실행
+
+# uptime 확인 
+w 
+
+# OS Version 확인
+cat /etc/redhat-release
+
+# filesystem 확인
+df -f
+
+# 통신 확인
+update install -y
+
+# Centos 필수 패키지
+# Common package
+epel-release    : 각종 패키지의 최신 버전을 사용하기 위해 설치
+
+net-tools       : 각종 네트워크 명령어들을 관리하는 패키지로 네트워크 연결 상태 및 확인을 위한 명령어
+ifconfig -a, up, down
+netstat -nlp, -an | grep [Port]
+unzip           : zip으로 압축된 파일을 풀기 위해 사용
+unzip [file_name].zip
+
+wget            : 웹 서버로부터 콘텐츠를 가져오는 명령어로 HTTP, HTTPS, FTP protocol 지원
+wget -o [file_name] [url]
+wget --no-check-certificate [url]
+
+curl            : 커맨드 라인용 데이터 전송 도구 HTTP, FTP 등 다양한 protocol 지원
+curl -o [file_name] [url]
+curl -T [file_name] [server_ip]
+curl -L [url]
+
+chrony          : NTP를 구현한 Server/client로 ntpd를 대체하며, 서버의 시간을 동기화 한다.
+systemctl status chronyd
+
+gcc, gcc-c++    : 각각 c언어, c++언어 컴파일러로 서버에 개발환경을 구축하기 위해 설치
+
+openssl-devel   : openssl을 설치하기 위한 의존성 패키지로 openssl을 사용할 애플리케이션 개발용 파일
+
+
+# Server mornitoring package
+htop            : 리눅스에서 사용중인 리소스확인용
+PID, USER, PR, NI, VIRT, RES, SHR... etc
+
+iftop           : 네트워크 인터페이스의 트래픽 모니터링
+iftop -i eno1
+iftop -f "dst port 22"
+
+dstat           : 실시간 디스크별 I/O 사용량 체크 및 부하 유발을 주는 프로세스 식별
+dstat -tcpml
+
+sysstat         : 리눅스 성능 측정 도구 packages sar, iostat 사용
+iostat -d 3, -c 3             # cpu, disk 처리량 실시간 모니터링
+sar -u, -r, -dp, -n DEV       # 과거 모니터링 정보를 확인 /var/log/sa 폴더에 기록된 sa파일 조회
+
+lsof            : 시스템에 열려있는 파일 정보 출력
+lsof -u [user_name]
+lsof -c [service_name]
+
+psmisc          : proc 파일 시스템을 사용하는 유틸리티 패키지로 fuser, killall, pstree 사용
+fuser -v [directory]          # 특정 파일 시스템을 unmount 할 때, 프로세스 때문에 진행이 안되면 해당 프로세스 식별
+killall -i [process_name]     # 특정 프로세스 한 번에 죽이기 위해 사용
+pstree -anp                   # 프로세스의 상태를 Tree 구조로 출력하여 확인
+
+# recomentation package
+mlocate         : 파일 검색용으로 데이터베이스 기반으로 검색
+updatedb
+locate [file_name]
+
+ncat            : Server Client 가 소켓 통신을 하기 위해 사용
+ncat [Server_IP] [Port]
+
+whois           : 도메인 소유자나 IP 주소 위치 등 이외 다른 정보를 확인할 때 사용
+whois [domain]
+whois [ip]
+
+cloud-utils-growpart  : LVM 구성이 아닌 상태에서 root 파티션 용량을 추가하기 위해 사용
+growpart [disk_name] [disk_number]
+resize2fs [partition_path]
+
+tcping          : client에서 server의 TCP 포트를 PING 유틸리티로 체크하기 위해 사용
+tcping [Server_IP] [Port]
