@@ -1,0 +1,18 @@
+# PAM의 pam_tally2.so : 로그인 시도 횟수를 카운트하는 모듈로 실패시 관리해주는 역할 수행
+deny        :   로그인 시도가 숫자만큼 실패하면 접근 차단
+unlock_time :   일정 횟수 이상 로그인 실패 시, 숫자만큼 접근 차단
+lock_time   :   로그인 실패 시 숫자동안 접근 차단
+
+cat /etc/pam.d/system-auth
+...
+# example
+auth required pam_tally2.so deny=5 unlock_time=120
+...
+account required pam_tally2.so
+...
+
+# 잠금 계정 정보 출력
+pam_tally2
+
+# 잠금 계정 해제
+pam_tally2 -r -u "계정명"
