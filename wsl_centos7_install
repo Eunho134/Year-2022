@@ -20,16 +20,17 @@ wsl --set-default-version 2
 
 # Centos 7.9 install 실행 및 wsl 실행
 
-# uptime 확인 
+# install 후 정상 여부 테스트 
+# 1. uptime 확인 
 w 
 
-# OS Version 확인
+# 2. OS Version 확인
 cat /etc/redhat-release
 
-# filesystem 확인
+# 3. filesystem 확인
 df -f
 
-# 통신 확인
+# 4. 통신 확인
 update install -y
 
 # Centos 필수 패키지
