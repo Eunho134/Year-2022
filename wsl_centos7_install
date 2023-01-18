@@ -2,7 +2,7 @@
 
 # Linux용 Widows 하위 시스템 설정
 # 관리자 권한으로 실행 cmd or powershell
-dism.exe /online /enalbe-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
 
 # Linux 커널 최신 업데이트 
 # https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi Download 및 실행
