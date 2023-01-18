@@ -1,0 +1,56 @@
+# iptable install
+
+yum update -y
+yum install -y iptables-services
+
+systemctl daemon-reload
+systemctl enabele iptables / ip6tables
+systemctl start iptables / ip6tables
+
+# iptables 정책 확인
+iptables -nvL
+
+# ifconfig 정책 추가 대상 확인 (네트워크 인터페이스)
+# 나중에 등록한 정책의 우선순위가 더 높다.
+# example
+iptables -A INPUT -i eth0 -p tcp --dport 6456 -j ACCEPT     # 6456 port 허용
+iptables -A INPUT -i eth0 -p tcp --dport 6456 -j DROP       # 6456 port 거부
+
+# 특정 IP의 특정 port 허용
+iptables -A INPUT -p tcp -s 10.x.x.x --dport 80 -j ACCEPT
+
+# portforwarding 520 → 5220 리다이렉트
+iptables -A PREROUTEING -t nat -i eth0 -p tcp --dport 520 -j REDIRECT --to-port 5220 
+
+# iptables 초기화
+iptables -F
+
+# iptables Log mornitoring config
+cat /etc/sysconfig/iptables
+
+---
+-A INPUT -j LOG --log-prefix "Deny_INPUT : " --log-level 4 
+
+# 로그생성시 접두어는 "Deny_INPUT" 로그 분석시 접두어를 이용하여 출력
+# 로그 레벨은 Warning
+#/var/log/messages에 생성
+
+# example 특정IP의 443인입 차단
+-A INPUT -s 10.10.X.X -p tcp --dport 443 -j DROP
+---
+
+# Severity Level (로그 심각도 단계)
+Emerg   : 0
+Alert   : 1
+Crit    : 2
+Error   : 3
+Warning : 4
+Notice  : 5
+info    : 6
+Debug   : 7
+
+# 별도의 로그 축적
+cat /etc/rsyslog.conf
+
+# IPtables INPUT Deny Log
+:msg,contains,"Deny_INPUT"  /var/log/iptables_deny.log
