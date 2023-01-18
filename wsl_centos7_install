@@ -15,7 +15,10 @@ dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /nores
 wsl --set-default-version 2
 
 # Linux install
-# Ubuntu-18.04 > Microsoft Store 
+# Ubuntu-18.04 > Microsoft Store > wsl 검색
+# version 상태 확인
+wsl -l -v 
+
 # Centos 7.9 > github.com/mishamosher/CentOS-WSL/releases/tag/7.9-2009
 
 # Centos 7.9 install 실행 및 wsl 실행
