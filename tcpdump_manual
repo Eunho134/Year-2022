@@ -1,0 +1,13 @@
+# network interface packet 출력 프로그램
+
+# tcpdump 사용방법
+tcpdump -i eth0                 : interface eth0 을 보여줌
+tcpdump -w tcpdump.log          : 결과를 파일로 저장, txt 가 아닌 bin 형식
+tcpdump -r tcpdump.log          : 저장한 파일을 읽음
+tcpdump -i eth0 tcp port 80     : tcp 80 통신하는 packet 출력
+tcpdump -i eth0 src [ip]        : source ip packet 출력
+tcpdump -i eth9 dst [ip]        : dest ip packet 출력
+
+# example 통신 테스트
+# eth0를 지나는 dst ip xxx.xx.xx.x 인 udp protocol 인 514 service port packet 출력
+tcpdump -w tcpdump.log -i eth0 dst xxx.xx.xx.x and udp and port 514
