@@ -10,7 +10,7 @@ chronyc sources > ./chrony_check.txt
 check2=`head -n 1 ./chrony_check.txt | awk '{print $1}' 2>/dev/null`
 
 function do_ntp_Check() {
-  if [ 0 -eq $check1 -o 210 -eq $check2 ]; then
+  if [[ 0 -eq $check1 || 210 -eq $check2 ]]; then
     echo "##### 01.NTP Check ##### [SUCCESS]"
   else
     echo "##### 01.NTP Check ##### [FAIL]"
@@ -22,11 +22,12 @@ do_ntp_Check
 ##### 02.Sys Log Check #####
 
 TODAY=`date '+%b  %-d'`
+sys_path=''
 
 PATTERN="grep -ve rtc_cmos -ve ACPI -ve nagios -ve Failed.*to.*change.*password -ve unable.*to.*open.*console -ve procheader.*error -ve gnome-keyring-daemon -ve seahorse-daemon -ve ERST -ve rpc.statd -ve .*error.*in.*address.*'::.*' -ve sd.forwarder -ve sd.collector -ve pts/1i -ve sd_journal_get_cursor -ve avast -ve rtvscand.*Could.*not.*scan -ve authentication.*failure -ve rtvscand.*Scan.*could.*not.*open.*file -ve *error.*retrieving.*information.*about.*user -ve sd.forwarder -ve sd.collector" -ve FAILED.*SU
-ERR_COUNT=`cat /var/log/messages | egrep -i 'error|fail' | ${PATTERN} | egrep "${TODAY}" | wc -l`
+ERR_COUNT=`cat $sys_path | egrep -i 'error|fail' | ${PATTERN} | egrep "${TODAY}" | wc -l`
 
-if [ ${ERR_COUNT} -eq 0 ]; then
+if [[ ${ERR_COUNT} -eq 0 ]]; then
   echo "##### 02.Sys Log Check ##### [SUCCESS]"
 else
   echo "##### 02.Sys Log Check ##### [FAIL]"
@@ -46,13 +47,13 @@ var3=`date -d "1970-01-01 + $var1 day + $var2 day" "+%s"  2>/dev/null`
 var4=99999
 today=`date "+%s"`
 
-if [ $var2 -eq $var4 ]; then
+if [[ $var2 -eq $var4 ]]; then
   echo "##### 03 Check Account Expire Date ##### [SUCCESS] '$user' Password Never Expire"
 else
   var5=$(($var3-$today))
   var5=`eval "echo $(date -ud "@$var5" +'$((%s/3600/24))')"`
 
-  if [ $var5 -le $alert_expire_time ]; then
+  if [[ $var5 -le $alert_expire_time ]]; then
     echo "##### 03 Check Account Expire Date ##### [FAIL] '$user' password expire $var5 days left "
   else
     echo "##### 03 Check Account Expire Date ##### [SUCCESS]"
@@ -76,7 +77,7 @@ awk '$1 >80' ./disk_act2.txt > ./disk_act3.txt
 check=cat ./disk_act3.txt | grep -i "%" | wc -l
 
 function do_Disk_Volume_Check() {
-if [ 1 -ne $check ]; then
+if [[ 1 -ne $check ]]; then
 echo "##### 04.Disk Volume Check ##### [ALERT]"
 cat ./disk_act3.txt
 else
@@ -89,9 +90,9 @@ do_Disk_Volume_Check
 ##### 06.Disk Mount Check #####
 
 DF2=df -hP|grep -v tmpfs | wc -l
-if [ "$DF1" == "$DF2" ]; then
+if [[ "$DF1" == "$DF2" ]]; then
 echo "##### 07 Disk Mount Check ##### [SUCCESS]"
-elif [ "$DF1" != "$DF2" ]; then
+elif [[ "$DF1" != "$DF2" ]]; then
 echo "##### 07 Disk Mount Check ##### [FAIL]"
 fi
 touch /etc/profile.d/test.sh
@@ -111,9 +112,9 @@ cat ${i}/write_test_${DATE}.txt 2>/dev/null
 ifB=$?
 rm -f ${i}/write_test_${DATE}.txt
 
-if [ "$ifA" == 0 ]&&[ "$ifB" == 0 ]; then
+if [[ "$ifA" == 0 ]&&[ "$ifB" == 0 ]]; then
 printf "##### 08 Filesystem I/O Check ##### ${i}[Success]\n"
-elif [ "$ifA" != 0 ]&&[ "ifB" != 0 ]; then
+elif [[ "$ifA" != 0 ]&&[ "ifB" != 0 ]]; then
 printf "##### 08 Filesystem I/O Check ##### ${i}[FAIL]\n"
 fi
 done
