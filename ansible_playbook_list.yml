@@ -151,7 +151,8 @@ $ cat gather_fact.yml         # gather_fact 로 Manage Node 수집
 
 # 수행 명령어 ansible-playbook -i $inventory_path $playbook    
 
-$ cat crontab_create.yml      # crontab config
+# cron configuration
+$ cat crontab_create.yml
 ---
 - name: Cron dalilyCheck job create
   hosts: all
@@ -175,3 +176,53 @@ $ cat crontab_create.yml      # crontab config
 # playbook=""                 # playbook yaml 파일 명
 
 # 수행 명령어 ansible-playbook -i $inventory_path $playbook  
+
+
+# shell module : /bin/sh를 기본으로 사용, 환경변수 및 쉘 기능 사용 가능
+cat shell.yml
+---
+- name: Execute ther command in remote shell
+  hosts: all
+  tasks:
+  - shell: /home/ansible_test/get_date.sh >> /home/ansible_test/result.log
+
+# inventory_path=""           # inventory path
+# playbook=""                 # playbook yaml 파일 명
+
+# 수행 명령어 ansible-playbook -i $inventory_path $playbook 
+
+# command module : 쉘 변수나 operator <. >, |, & 사용 불가능
+cat command.yml
+---
+- name: Reboot
+  commnad: /sbin/shutdown -r now
+  sudo: yes
+
+# inventory_path=""           # inventory path
+# playbook=""                 # playbook yaml 파일 명
+
+# 수행 명령어 ansible-playbook -i $inventory_path $playbook 
+
+# raw module : ssh 에서 command를 실행
+cat raw_command.yml
+---
+- name: Install vim
+  raw: yum install -y vim-command
+  sudo: yes
+
+# inventory_path=""           # inventory path
+# playbook=""                 # playbook yaml 파일 명
+
+# 수행 명령어 ansible-playbook -i $inventory_path $playbook 
+
+# script module : remote script 실행
+cat remote_sh.yml
+---
+- name: List directories in /etc
+  script: list_number_of_directories.sh /etc
+  sudo: yes
+
+# inventory_path=""           # inventory path
+# playbook=""                 # playbook yaml 파일 명
+
+# 수행 명령어 ansible-playbook -i $inventory_path $playbook 
