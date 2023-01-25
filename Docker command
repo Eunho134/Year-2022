@@ -1,0 +1,33 @@
+# 1. search image 검색
+docker search centos
+
+# 2. pull image download
+docker pull centos:latest
+
+# 3. show my images lists 
+docker images
+
+# 4. run container create and connect
+docker run "REPOSITORY"
+# -i : 사용자 입출력 상태, -t : 가상 터미널 환경, -d : 데몬 프로세스 형태로 백그라운드 실행
+
+# 5. status ps container, -a : 이전 종료된 컨테이너 까지 모두 확인
+docker ps -a
+
+# 6. start stopped container
+docker start "containerID"
+
+# 7. connect container
+docker attach "containerID"
+
+# 8. stop container
+docker stop "containerID"
+
+# 9. remove container
+docker rm "containerID"
+
+# 10. port forwarding
+docker run -it -p "HOST PORT":"DOCKER PORT" "started docker image" /bin/bash
+
+# bulid docker image
+docker bulid -t "create new image" "Dockerfile path"
