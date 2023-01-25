@@ -1,0 +1,84 @@
+# Ansible Install Update Ubuntu System
+sudo apt update -y
+sudo apt upgrade -y
+
+# Install Ansible on Ubuntu
+sudo apt install python-setuptools -y
+sudo apt install python3-pip -y
+sudo pip3 install ansible
+
+# Ansible version installed on my mysystem
+ansible version
+
+# Install docker and docker-compose 
+# https://docs.docker.com/engine/install/ubuntu/
+
+# Docker install on Ubuntu - uninstalled  
+sudo apt-get remove docker docker-engine docker.io containerd runc
+
+# pakage install
+sudo apt update -y
+sudo apt install -y ca-certificates curl gnupg lsb-release 
+
+# Docker GPG key Setting
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpgcurl
+
+# Repository configure
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Docker Engine install
+sudo apt -y update
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+sudo apt -y update
+
+# Docker Engine, containerd, Docker Compose
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# Hello-world
+sudo docker run hello-world
+
+# Check docker version
+sudo apt install -y docker docker.io
+docker version
+
+# Install docker-compose on Ubuntu 20.04
+sudo apt install docker-compose
+
+# Check the docker-compose
+docker-compose version
+
+# Install ther latest docker-compose
+sudo wget -O  /usr/local/bin/docker-compose https://github.com/docker/compose/releases/download/1.25.0/docker-compose-Linux-x86_64
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Install docker-compose by pip3
+sudo pip3 install docker-compose
+docker version
+
+# Give access ther docker group
+# Currentlyy logged-in users
+sudo usermod -aG docker $USER
+
+# Install extra packaged
+sudo apt install -y git vim pwgen
+
+# Git Clone
+sudo git clone https://github.com/ansible/awx.git
+
+# Failed →
+sudo apt install -y unzip
+wget https://github.com/ansible/awx/archive/17.1.0.zip
+unzip ./17.1.0.zip
+mv awx-17.1.0 awx
+
+# Change the directroy to awx/installer as :
+cd awx/installer
+pwgen -N 1 -s 30
+“Export"    # inventory secret_key 
+vi inventory    # replacing admin_password and secret_key
+
+# Install AWX
+ansible-playbook -i inventory install.yml
+sudo docker ps -a
+
