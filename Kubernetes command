@@ -1,6 +1,16 @@
  Get
 # namespace 조회
 $ kubectl get ns or namespace
+default     : 다른 namespace가 없는 오브젝트를 위한 기본 네임스페이스
+kube-system : kubernetes 시스템에서 생성한 오브젝트를 위한 네임스페이스
+kube-public : 모든 사용자가 읽기 권한으로 접근할 수 있으며, 
+              이 네임스페이스는 주로 클러스터 중에 공개적으로 확인되어 읽을 수 있는 리소스를 위해 예약 되어 있음
+
+# api resource 조회
+$ kubectl apt-resource
+
+# namespace의 resource조회
+$ kubectl get all -o wide -n default
 
 # default namespace의 pod조회 
 $ kubectl get pods
@@ -31,6 +41,9 @@ $ kubectl get svc --all-namespaces
 #node 조회
 $ kubectl get node
 ♬ Create
+# namespace 생성
+$ kubectl create ns namespace_name
+
 # test.yaml파일 작성 후 create하면 yaml파일의 내용이 생성
 $ kubectl create -f test.yaml 
 
