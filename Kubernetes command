@@ -1,68 +1,72 @@
-# 1. version
-kubectl version --short
+ Get
+# default namespace의 pod조회 
+$ kubectl get pods
 
-# 2. Show usefull object list
-kubectl api-resources
+# 모든 namespace의 pod조회
+$ kubectl get pods --all-namespaces
 
-# 3. Create resource for yaml file
-kubectl apply -f [yaml file]
+# pod 정보 자세히 보기 
+$ kubectl get pod -o wide
 
-# 4. Exist object list 
-kubectl get pods
-NAME    READY   STATUS  RESTARTS    AGE
+# pod watch mode로 보기 
+$ kubectl get pod -w
 
--o wide        : 추가 정보
---show-labels  : label 정보
+# default namespace의 deployment조회
+$ kubectl get deploy
 
-# 5. Show Describe object info
-kubectl describe pods [pod name]
-Name, Nmaespace, Priority, Node, Start Time, Labels, Annotations, Status, IP ...
+# 모든 namespace의 모든 deployment조회
+$ kubectl get deploy --all-namespaces
 
-# 6. Connect Pod
-kubectl exec -it [pod name] bash
+# default namespace의 service조회
+$ kubectl get service
+$ kubectl get svc
 
-# 7. Connect Container
-kubectl exec -it [pod name] -c [container name] bash
+# 모든 namespace의 모든 service조회
+$ kubectl get service --all-namespaces
+$ kubectl get svc --all-namespaces
 
-# 8. Check pod log
-kubectl logs [pod name]
+#node 조회
+$ kubectl get node
+♬ Create
+# test.yaml파일 작성 후 create하면 yaml파일의 내용이 생성
+$ kubectl create -f test.yaml 
 
-# 9. Delete object
-kubectl delete -f [yaml file]
+# yaml파일의 문법이 맞는지 확인하기 
+$ kubectl create -f test.yaml --dry-run=client
 
-# Delete --all
-kubectl delete deployment,pod,rs --all
+# 명령어로 create 후 yaml 파일로 만들기
+$ kubectl create deploy test-deploy --image=nginx --dry-run=client -o yaml > nginx.yaml
+♬ Delete
+#test.yaml 파일로 생성된 내용 삭제
+$ kubectl delete -f test.yaml
 
-# Resource edit 
-# object type = pods
-kubectl edit pods [pod name]
+# 모든 자원 삭제 
+$ kubectl delete all --all
 
-# Setting deployment 
-# --record : 변경사항 기록
-kubectl apply -f [deployment yaml file] --record
+# 원하는 파드만 삭제 
+$ kubectl get pod
+$ kubectl delete {pod이름}
+♬ Describe
+# node 정보
+$ kubectl get nodes
+$ kubectl describe nodes {node이름}
 
-# Show rollout pods info 
-kubectl rollout history deployment [pod name]
-REVISION    CHANGE-CAUSE
+# pod 정보
+$ kubectl get pods
+$ kubectl describe pod {pod이름}
+♬ Exec
+# Pod에 bash로 들어가기
+$ kubectl get pods
+$ kubectl exec -it {pod이름} /bin/bash
 
-# Rollback
-kubectl rollout undo deployment [pod name] --to-revision=1
+# 특정 Pod에서 curl 실행하기
+$ kubectl get pods
+$ kubectl exec {pod이름} -- curl localhost:8080
+♬ Log
+# 특정 pod의 로그 확인
+$ kubectl get pods
+$ kubectl logs {pod이름}
 
-# Change Pods Scale
-kubectl scale --replicas=1 deployment [pod name]
-
-# Create configmap
-# --from-literal 해당 설정 값 설정
-kubectl create configmap start-k8s --from-literal k8s=kubernetes --from-literal container=docker
-
-# Show configmap on yaml type
-kubectl get configmap [configmap name] -o yaml
-
-# Create configmap from file_name
-# key   : --from-file key=[file name]
-# env   : --from-env-file [env file name]
-kubectl create configmap index-file --from-file "index.html"
-
-# Deployment without configmap : --dry-run
-# 실행 가능여부만 체크 : kuebectl apply, create 
-kubectl create configmap my-configmap --from-literal mykey="key name" --dry-run -o yaml > "yaml file name"
+# 특정 pod의 로그 tail 
+$ kubectl get pods
+$ kubectl logs -f {pod이름}
