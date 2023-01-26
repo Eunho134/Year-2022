@@ -1,4 +1,7 @@
  Get
+# namespace 조회
+$ kubectl get ns or namespace
+
 # default namespace의 pod조회 
 $ kubectl get pods
 
