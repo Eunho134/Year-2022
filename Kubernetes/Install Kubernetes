@@ -1,4 +1,5 @@
-# Check point before installed
+# Check point before installed 
+# 참고 : skyer9.pe.kr/wordpress/?p=6630
 # ufw stop
 systemctl stop ufw
 systemctl disable ufw
@@ -77,3 +78,12 @@ kubeadm token list
 
 # hash 값 확인 
 openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+
+# Notice port concept
+nodeport        : 외부 포트
+port            : 서비스 포트
+containerPort   : pod의 포트
+
+# Path 
+nodePort → port → containterPort 
+
