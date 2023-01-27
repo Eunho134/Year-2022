@@ -48,6 +48,15 @@ sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://pack
 
 echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
+# Install kubelet, kubeadm, kubectl
+apt update -y
+apt install -y kubelet kubeadm kubectl
+apt-mark hold kubelet kubeadm kubectl
+
+# service 등록
+systemctl daemon-reload
+systemctl enable/start kubelet
+
 # Trouble Shooting kubectl init : error
 rm -rf /etc/containerd/config.toml
 systemctl restart containerd
@@ -59,8 +68,9 @@ kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/we
 # Check READY
 kubectl get nodes
 
-# Worker node only
-
+# Worker node only - 
+kubeadm join [master ip]:6443 --token [master token] \
+--discovery-token-ca-cert-hash sha256:[master hash]
 
 # token 조회 - master node
 kubeadm token list
