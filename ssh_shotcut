@@ -8,4 +8,3 @@ ssh_port=""
 
 # 예시
 $putty_path/putty.exe -ssh -P $ssh_port $user@$ssh_ip -pw $password
-
