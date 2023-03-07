@@ -1,0 +1,144 @@
+---
+- name: Install Zabbix6.0 to Ubuntu20.04 using ansible
+  hosts: target
+  tasks:
+    - name: Update the System Packages
+      yum:
+        name: "*"
+        state: latest
+        update_cache: yes
+
+    - name: Install zabbix package
+      yum:
+        name: https://repo.zabbix.com/zabbix/5.0/rhel/7/x86_64/zabbix-release-5.0-1.el7.noarch.rpm
+        state: present
+
+    - name: Clean yum
+      command: yum clean all
+
+    - name: Again Update the System Packages
+      yum:
+        name: "*"
+        state: latest
+        update_cache: yes
+
+    - name: Create mariadb repo directory
+      file:
+        path: /etc/yum.repos.d
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy mariadb10.5 repo
+      copy:
+        src: /etc/yum.repos.d/MariaDB.repo
+        dest: /etc/yum.repos.d/MariaDB.repo
+        mode: '0755'
+
+    - name: Install mariadb10.5
+      yum:
+        name:
+          - MariaDB-server
+          - MariaDB-client
+
+    - name: Install Apache httpd
+      yum:
+        name: httpd
+        state: latest
+
+    - name: Install Zabbix
+      yum:
+        name:
+          - zabbix-server-mysql
+          - zabbix-agent
+
+    - name: Enable red hat software collections
+      yum:
+        name: centos-release-scl
+
+    - name: Remove zabbix.repo
+      file:
+        path: /etc/yum.repos.d/zabbix.repo
+        state: absent
+
+    - name: Reinstall zabbix.repo
+      copy:
+        src: /etc/yum.repos.d/zabbix.repo
+        dest: /etc/yum.repos.d/zabbix.repo
+        mode: '0755'
+
+    - name: yum install frontend packages
+      yum:
+        name:
+          - zabbix-web-mysql-scl
+          - zabbix-apache-conf-scl
+
+    - name: Start the Mariadb service
+      service:
+        name: mariadb
+        state: started
+        enabled: true
+
+    - name: Start the Apache httpd service
+      service:
+        name: httpd
+        state: started
+        enabled: true
+
+    - name: Start the zabbix-server service
+      service:
+        name: zabbix-server
+        state: started
+        enabled: true
+
+    - name: Start the zabbix-agent service
+      service:
+        name: zabbix-agent
+        state: started
+        enabled: true
+
+    - name: Create zabbix databases and zabbix user
+      shell: |
+        mysql -e "create database zabbix character set utf8 collate utf8_bin;"
+        mysql -e "create user zabbix@localhost identified by 'password';"
+        mysql -e "grant all privileges on zabbix.* to zabbix@localhost;"
+        mysql -e "set global log_bin_trust_function_creators = 1;"
+        zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -uzabbix -p'password' zabbix
+        mysql -e "set global log_bin_trust_function_creators = 0;"
+      register: mariadb
+
+    - name: Print mariadb result
+      debug: msg="{{mariadb.stdout_lines}}"
+
+    - name: Config DBPassword
+      replace:
+        path: /etc/zabbix/zabbix_server.conf
+        regexp: "# DBPassword="
+        replace: "DBPassword=password"
+
+    - name: Config timezone
+      replace:
+        path: /etc/opt/rh/rh-php72/php-fpm.d/zabbix.conf
+        regexp: "; php_value[date.timezone] = Europe/Riga"
+        replace: "; php_value[date.timezone] = Asia/Seoul"
+
+    - name: Start the Apache httpd
+      service:
+        name: httpd
+        state: restarted
+
+    - name: Start rh-php72-php-fpm
+      service:
+        name: rh-php72-php-fpm
+        state: restarted
+        enabled: true
+
+    - name: Start the zabbix-server service
+      service:
+        name: zabbix-server
+        state: restarted
+
+    - name: Start the zabbix-agent service
+      service:
+        name: zabbix-agent
+        state: restarted
