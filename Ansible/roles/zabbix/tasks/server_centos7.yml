@@ -1,0 +1,113 @@
+---
+- name: Update the System Packages
+  yum:
+    name: "*"
+    state: latest
+    update_cache: yes
+
+- name: Copy zabbix5.0 package
+  copy:
+    src: "{{ local_path  }}/zabbix-release-5.0-1.el7.noarch.rpm"
+    dest: "{{ remote_path }}/zabbix-release-5.0-1.el7.noarch.rpm"
+
+- name: Install zabbix package
+  yum:
+    name: zabbix-release-5.0-1.el7.noarch.rpm
+    state: present
+
+- name: Clean yum
+  command: yum clean all
+
+- name: Again Update the System Packages
+  yum:
+    name: "*"
+    state: latest
+    update_cache: yes
+
+- name: Create mariadb repo directory
+  file:
+    path: /etc/yum.repos.d
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Copy mariadb10.5 repo
+  copy:
+    src: "{{ local_path }}/files/MariaDB.repo"
+    dest: /etc/yum.repos.d/MariaDB.repo
+    mode: '0755'
+
+- name: Install mariadb10.5
+  yum:
+    name:
+      - MariaDB-server
+      - MariaDB-client
+    state: latest
+
+- name: Install Apache httpd
+  yum:
+    name: httpd
+    state: latest
+
+- name: Install Zabbix
+  yum:
+    name:
+      - zabbix-server-mysql
+    state: latest
+
+- name: Enable red hat software collections
+  yum:
+    name: centos-release-scl
+
+- name: Remove zabbix.repo
+  file:
+    path: /etc/yum.repos.d/zabbix.repo
+    state: absent
+
+- name: Reinstall zabbix.repo
+  copy:
+    src: "{{ local_path }}/files/zabbix.repo"
+    dest: /etc/yum.repos.d/zabbix.repo
+    mode: '0755'
+
+- name: yum install frontend packages
+  yum:
+    name:
+      - zabbix-web-mysql-scl
+      - zabbix-apache-conf-scl
+  notify:
+    - Start mariadb service  
+    - Start httpd service
+    - Start zabbix-server service
+
+- name: Create zabbix databases and zabbix user
+  shell: |
+    mysql -e "create database zabbix character set utf8 collate utf8_bin;"
+    mysql -e "create user zabbix@localhost identified by 'password';"
+    mysql -e "grant all privileges on zabbix.* to zabbix@localhost;"
+    mysql -e "set global log_bin_trust_function_creators = 1;"
+    zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -uzabbix -p'password' zabbix
+    mysql -e "set global log_bin_trust_function_creators = 0;"
+  register: mariadb
+
+- name: Print mariadb result
+  debug: 
+    msg:
+    - "{{ mariadb.stdout }}"
+
+- name: Config DBPassword
+  replace:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: "# DBPassword="
+    replace: "DBPassword=password"
+
+- name: Config timezone
+  replace:
+    path: /etc/opt/rh/rh-php72/php-fpm.d/zabbix.conf
+    regexp: "; php_value[date.timezone] = Europe/Riga"
+    replace: "; php_value[date.timezone] = Asia/Seoul"
+  notify:
+    - Restart httpd service
+    - Start rh-php72-php-fpm service
+    - Restart zabbix-server service
+

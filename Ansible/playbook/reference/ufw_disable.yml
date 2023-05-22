@@ -1,0 +1,19 @@
+---
+- name: Ubuntu ufw service stop
+  hosts: target
+  tasks:
+    - name: Update the System Packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+
+    - name: stop ufw service
+      service:
+        name: ufw
+        state: stopped
+
+    - name: disable ufw service
+      shell: ufw disable
+      args:
+        executable: /bin/bash
+

@@ -1,0 +1,25 @@
+---
+- name: Homepage Intra tomcat stop
+  gather_facts: false
+  hosts: poma-in-was
+  become: yes
+  tasks:
+    - name: Stop tomcat
+      vars:
+        ansible_become_user: tomcat
+        ansible_become_method: su
+      command:
+        cmd: |
+          ./stop.sh
+      args:
+        chdir: /CLOUD/tomcat9/server/poma_home_in/bin
+
+    - name: Check process status
+      shell: |
+        ps -ef | grep tomcat | grep home_in
+      register: homein
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{homein.stdout_lines}}"

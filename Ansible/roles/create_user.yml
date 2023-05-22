@@ -1,0 +1,31 @@
+---
+- hosts: ehzabbix
+  gather_facts: false
+  vars:
+    worker: "cloit"
+    workerpassword: "1234"
+  become: yes
+  tasks:
+    - name: Make 'wheel' group
+      group:
+        name: wheel
+        state: present
+
+    - name: Allow 'wheel' group to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        line: '%wheel ALL=(ALL) ALL'
+        validate: /usr/sbin/visudo -cf %s
+
+    - name: Add User with password
+      user:
+        name: "{{ worker }}"
+        shell: /bin/bash
+        group: 'wheel'
+        append: yes
+        state: present
+        password: "{{ workerpassword | password_hash('sha512') }}"
+        password_expire_max: 60
+        password_expire_min: 60
+        createhome: yes

@@ -1,0 +1,25 @@
+---
+- name: GroupWare AtMessenger7 service stop
+  hosts: poma-gw-was
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Stop service
+      vars:
+        ansible_become: yes
+        ansible_become_method: su
+      command:
+        cmd: |
+          ./stop.sh
+      args:
+        chdir: /data/AtMessenger7
+
+    - name: Check process
+      shell: |       
+        ps -ef | grep AtMess
+      register: AtMess
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{AtMess.stdout_lines}}"

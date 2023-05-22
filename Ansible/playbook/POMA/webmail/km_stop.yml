@@ -1,0 +1,36 @@
+---
+- name: Stop KM Webmail6 service
+  hosts: poma-mail-was
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: Stop first service
+      command:
+        cmd: |
+          ./beehive3.sh stop
+      args:
+        chdir: /usr/local/ayersrock/beehive3
+
+    - name: Stop second service
+      command:
+        cmd: |
+          ./stop.sh
+      args:
+        chdir: /usr/local/ayersrock/kebimail_factory
+
+    - name: Stop third service
+      command:
+        cmd: |
+          ./stop.sh
+      args:
+        chdir: /usr/local/ayersrock/kebimail_disk
+
+    - name: Check process status
+      shell: |
+        ps -ef | grep "beehive3|kebimail_factory|kebimail_disk" 
+      register: result
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{result.stdout_lines}}"

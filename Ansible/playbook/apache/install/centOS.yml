@@ -1,0 +1,126 @@
+---
+- hosts: target
+  name: Install Apache httpd2.4.53 using Ansible
+  gather_facts: false
+  vars:
+    LOCAL_PATH: /root/playbook/apache
+    REMOTE_PATH: /usr/local
+  tasks:
+    - name: Install package for install Apache http server Source
+      yum:
+        name: 
+          - gcc
+          - gcc-c++
+          - pcre-devel
+          - expat-devel
+        state: present
+
+    - name: Archive install file
+      unarchive:
+        src: "{{item.src}}"
+        dest: "{{item.dest}}"
+      with_items:
+        - { src: "{{ LOCAL_PATH }}/lib/apr-1.7.2.tar.gz", dest: "{{ REMOTE_PATH }}" }
+        - { src: "{{ LOCAL_PATH }}/lib/apr-util-1.6.3.tar.gz", dest: "{{ REMOTE_PATH }}" }
+        - { src: "{{ LOCAL_PATH }}/lib/httpd-2.4.56.tar.gz", dest: "{{ REMOTE_PATH }}" }
+        - { src: "{{ LOCAL_PATH }}/lib/pcre-8.45.tar.gz", dest: "{{ REMOTE_PATH }}" } 
+
+    - name: Change Apache directory
+      shell: |
+        mv /usr/local/httpd-2.4.56 /usr/local/apache
+      register: apache
+
+    - name: Print apache result
+      debug: msg="{{apache.stdout_lines}}"
+
+    - name: Add apache group
+      group:
+        name: apache
+        state: present
+
+    - name: Add apache user
+      user:
+        name: apache
+        groups: apache
+        state: present
+        home: /usr/local/apache
+
+    - name: Change Apache directory
+      shell: |
+        chown -R apache:apache /usr/local/apache
+      register: chown
+
+    - name: Print chown result
+      debug: msg="{{chown.stdout_lines}}"
+
+    - name: Install comfile
+      shell:
+        cmd: |
+          ./configure --prefix=/usr/local/pcre
+          make
+          make install
+      args:
+        chdir: /usr/local/pcre-8.45
+
+    - name: Move comfile directory
+      shell: |
+        mv /usr/local/apr-1.7.2 /usr/local/apache/srclib/apr
+        mv /usr/local/apr-util-1.6.3 /usr/local/apache/srclib/apr-util
+      register: move
+
+    - name: Print move result
+      debug: msg="{{move.stdout_lines}}"
+
+    - name: Install comfile to apache directory
+      shell:
+        cmd: |
+          ./configure --prefix=/usr/local/apache \
+          --enable-modules=all \
+          --enable-so \
+          --with-included-apr \
+          --with-mpm-shared=all
+      args:
+        chdir: /usr/local/apache
+
+    - name: Make comfile to apache directory
+      shell:
+        cmd: |
+          make && make install
+      args:
+        chdir: /usr/local/apache
+
+    - name: Configtest apache service
+      shell: |
+        sh /usr/local/apache/bin/apachectl
+      register: config
+
+    - name: Print config result
+      debug: msg="{{config.stdout_lines}}"
+
+    - name: Copy httpd service
+      copy:
+        src: "{{ LOCAL_PATH }}/conf/apache.service"
+        dest: "/etc/systemd/system/apache.service"
+
+    - name: linein to httpd.conf file
+      lineinfile:
+        path: /usr/local/apache/conf/httpd.conf
+        regexp: "#ServerName www.example.com:80"
+        line: "ServerName www.example.com:80"
+
+    - name: Stop httpd service
+      shell:
+        cmd: ./apachectl stop
+      args:
+        chdir: /usr/local/apache/bin
+
+    - name: Reload systemd service
+      systemd:
+        daemon_reload: true
+        enabled: true
+        name: apache
+
+    - name: Started apache service
+      systemd:
+        state: started
+        name: apache

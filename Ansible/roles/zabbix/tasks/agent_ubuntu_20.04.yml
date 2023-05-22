@@ -1,0 +1,87 @@
+---
+- name: Install ca-certificates
+  apt:
+    name: ca-certificates
+    state: latest
+
+- name: Download zabbix package
+  copy:
+    src: "{{ local_path }}/files/zabbix-release_6.0-4+ubuntu20.04_all.deb"
+    dest: "/zabbix-release_6.0-4+ubuntu20.04_all.deb"
+
+- name: Unarchive zabbix package
+  shell: 
+    cmd: 
+      dpkg -i /zabbix-release_6.0-4+ubuntu20.04_all.deb
+  register: dpkg
+  ignore_errors: yes
+
+- name: Print dpkg result
+  debug:
+    msg:
+    - "{{ dpkg.stdout }}"
+
+- name: Remove lock file
+  shell: |
+    rm -rf /var/lib/dpkg/lock*
+    rm -rf /var/lib/apt/lists/lock*
+  register: lockfile
+
+- name: Print lockfile
+  debug: 
+    msg: 
+    - "{{ lockfile.stdout_lines }}"
+
+- name: Update the System Packages
+  apt:
+    upgrade: yes
+    update_cache: yes
+
+- name: Install zabbix package
+  apt:
+    name: zabbix-agent
+    state: latest
+
+- name: Create hostname
+  shell:
+    cmd: |
+      hostname | cut  -d '.' -f 1
+  register: hostname
+
+- name: Print hostname
+  debug:
+    msg:
+      - "{{ hostname.stdout }}"
+
+- name: Configure Hostname
+  lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    regexp: "Hostname=Zabbix server"
+    line: "Hostname={{ hostname.stdout }}"
+
+- name: Configure Zabbix Server ip
+  lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    regexp: "Server=127.0.0.1"
+    line: "Server={{ zabbix_server_ip }}"
+
+- name: Configure Zabbix ServerActive ip
+  lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    regexp: "ServerActive=127.0.0.1"
+    line: "ServerActive={{ zabbix_server_ip }}"
+
+- name: Configure Zabbix log Path
+  lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    regexp: "LogFile=/var/log/zabbix/zabbix_agentd.log"
+    line: "LogFile={{ zabbix_agent_log_path }}"
+
+- name: Allow system.run
+  lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    regexp: "# DenyKey=system.run[*]"
+    line: "AllowKey=system.run[*]"
+  notify:
+    - Start zabbix-agent service
+    - Restart zabbix-agent service

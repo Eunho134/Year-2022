@@ -1,0 +1,40 @@
+---
+- name: Excute KR-UTF-8
+  shell:
+    cmd: |
+      locale-gen ko_KR.UTF-8
+  register: KRutf
+
+- name: Print KR-utf result
+  debug:
+    msg:
+    - "{{ KRutf.stdout }}"
+
+- name: Delete US.UTF-8 config
+  lineinfile:
+    path: "/etc/default/locale"
+    state: absent
+    regexp: "LANG=en_US.UTF-8"
+
+- name: Check KR.UTF-8 config
+  shell: 
+    cmd: |
+      cat /etc/default/locale | grep "KR.UTF-8"
+  register: check
+  ignore_errors: true
+
+- name: Print check point
+  debug:
+    msg:
+    - "{{ check.stdout }}"
+
+- name: Add KR-utf config
+  lineinfile:
+    dest: "/etc/default/locale"
+    line: "{{ item }}"
+  with_items:
+    - 'LANG=ko_KR.UTF-8'
+    - 'LANGUAGE="ko_KR:ko:en_US:en"'
+  notify:
+    - Restart apache2 service
+    - Restart zabbix-server service

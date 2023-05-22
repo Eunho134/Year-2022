@@ -1,0 +1,25 @@
+---
+- name: Stop web service
+  hosts: poma-web1
+  gather_facts: false
+  vars:
+    ansible_become_user: apache
+    ansible_become_method: su
+    ansible_become_pass: "tltjfeks1!"
+  tasks:
+    - name: Stop service
+      command:
+        cmd: |
+          ./apache_stop.sh
+      args:
+        chdir: /home/apache
+
+    - name: Check process
+      shell: |
+        ps -ef | grep httpd | grep -v grep
+      register: httpd
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{httpd.stdout_lines}}"

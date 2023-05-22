@@ -1,0 +1,155 @@
+---
+- name: Install Owncloud to Ubuntu18.04 usging ansible
+  hosts: target
+  gather_facts: false
+  vars:
+    local_path: /root/playbook/owncloud
+    remote_path: /root
+  tasks:
+    - name: Remove lockfile
+      shell: |
+        rm -rf /var/lib/dpkg/lock*
+        rm -rf /var/lib/apt/lists/lock*
+        dpkg --configure -a
+      register: lockfile
+
+    - name: Print remove result
+      debug: msg="{{lockfile.stdout_lines}}"
+
+    - name: Update system package and upgrade
+      apt:
+        update_cache: yes
+        upgrade: yes
+
+    - name: Install essential package
+      apt:
+        name: 
+          - apache2
+          - libapache2-mod-php7.2
+          - openssl
+          - php-imagick
+          - php7.2-common
+          - php7.2-curl
+          - php7.2-gd
+          - php7.2-imap
+          - php7.2-intl
+          - php7.2-json
+          - php7.2-ldap
+          - php7.2-mbstring
+          - php7.2-mysql
+          - php7.2-pgsql
+          - php-smbclient
+          - php-ssh2
+          - php7.2-sqlite3
+          - php7.2-xml
+          - php7.2-zip
+          - unzip
+        state: present
+
+    - name: Check apache version
+      shell: |
+        dpkg -l apache2
+      register: check
+
+    - name: Print check result
+      debug: msg="{{check.stdout_lines}}"
+
+    - name: service activation
+      systemd:
+        name: apache2
+        state: started
+        enabled: true
+
+    - name: Copy Mariadb release key
+      copy:
+        src: "{{ local_path  }}/maria.file/mariadb_release_signing_key.asc"
+        dest: "/etc/apt/trusted.gpg.d/mariadb_release_signing_key.asc"
+
+    - name: Install Mariadb package
+      shell: |
+        sh -c "echo 'deb https://tw1.mirror.blendbyte.net/mariadb/repo/10.5/ubuntu bionic main' >>/etc/apt/sources.list"
+        rm -rf /var/lib/apt/lists/lock*
+      register: maria
+
+    - name: Print maria result
+      debug: msg="{{maria.stdout_lines}}"
+
+    - name: Again Update the System Packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+
+    - name: Install mariadb-server
+      apt:
+        name: mariadb-server
+        state: latest
+
+    - name: Start the Mariadb service
+      systemd:
+        name: mariadb
+        state: started
+        enabled: true
+
+    - name: Query mariadb to zabbix
+      shell: |
+        mysql -e "CREATE DATABASE owncloud_db;"
+        mysql -e "GRANT ALL ON owncloud_db.* TO 'owncloud_user'@'localhost' IDENTIFIED BY 'password';"
+        mysql -e "FLUSH PRIVILEGES;"
+      register: mariadb
+
+    - name: Print mariadb
+      debug: msg="{{mariadb.stdout_lines}}"
+
+    - name: Copy owncloud zip file
+      copy:
+        src: "{{ local_path }}/zip.file/owncloud-10.11.0.zip"
+        dest: "{{ remote_path }}/owncloud-10.11.0.zip"
+        remote_src: false
+        owner: root
+        group: root
+        
+#    - name: Unarchive owncloud file
+#      shell: |
+#        unzip owncloud-10.11.0.zip -d /var/www
+#      register: unarchive
+
+#    - name: Print unarchive
+#      debug: msg="{{unarchive.stdout_lines}}"
+
+    - name: Unarchive owncloud zip file
+      unarchive:
+        src: owncloud-10.11.0.zip
+        dest: /var/www
+        remote_src: yes
+
+    - name: Change mode directory
+      shell: |
+        chown -R www-data:www-data /var/www/owncloud/
+        chmod -R 755 /var/www/owncloud/
+      register: changemode
+
+    - name: Print change mode
+      debug: msg="{{changemode.stdout_lines}}"
+     
+    - name: Copy Owncloud conf file
+      copy:
+        src: "{{ local_path }}/conf.file/ownCloud.conf"
+        dest: "/etc/apache2/conf-available/ownCloud.conf"
+
+    - name: Excute apache module
+      shell: |
+        a2enconf owncloud
+        a2enmod rewrite
+        a2enmod headers
+        a2enmod env
+        a2enmod dir
+        a2enmod mime
+      register: excute
+
+    - name: Print excute result
+      debug: msg="{{excute.stdout_lines}}"
+
+    - name: Restart Aapche2 service
+      systemd:
+        name: apache2
+        state: restarted

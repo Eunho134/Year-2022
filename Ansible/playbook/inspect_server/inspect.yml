@@ -1,0 +1,65 @@
+---
+- hosts: nec
+  name: Script Inspect start
+  become: yes
+  become_method: sudo
+  gather_facts: false
+  vars:
+    local_path: /root/inspect/nec
+    remote_path: /cloit
+    date: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}"
+  tasks:
+    - name: Directory create
+      file:
+        path: "{{ remote_path }}"
+        state: directory
+
+    - name: Log file create
+      file:
+        path: "{{ remote_path }}/{{ date }}_result.txt"
+        state: touch
+
+    - name: Script Send
+      copy:
+        src: "{{ local_path }}/nec_inspect.sh"
+        dest: "{{ remote_path }}/nec_inspect.sh"
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Script Run
+      shell: |
+        sh "{{ remote_path }}/nec_inspect.sh" >> "{{ remote_path }}/{{ date }}_result.txt"
+      register: result
+
+    - name: Print result
+      debug: msg="{{result.stdout_lines}}"
+
+    - name: Copy Result.log From Remote to Local
+      fetch:
+        src: "{{ remote_path }}/{{ date }}_result.txt"
+        dest: /root/target 
+
+    - name: Script remove
+      file:
+        path: "{{ remote_path }}"
+        state: absent
+
+    - name: log remove
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /home1/ncloud/chrony_check.txt
+        - /home1/ncloud/disk_act1.txt
+        - /home1/ncloud/disk_act2.txt
+        - /home1/ncloud/disk_act3.txt
+        - /home1/ncloud/ntp_act1.txt 
+
+    - name: Remove ansible excute log
+      shell: |
+        sed -i '/ansible/d' /var/log/messages
+      register: ansible
+
+    - name: Print ansible excute log
+      debug: msg="{{ansible.stdout_lines}}"

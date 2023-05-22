@@ -1,0 +1,28 @@
+---
+- name: GroupWare WeB, WAS service start
+  hosts: poma-gw-was
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Start service
+      vars:
+        ansible_become_user: handy
+        ansible_become_method: su
+      command:
+        cmd: |
+          ./gw.start
+      args:
+        chdir: /data/handy/bin
+
+    - name: Check process
+      shell: 
+        cmd: |       
+          ./chk
+      args:
+        chdir: /data/handy/bin
+      register: handy
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{handy.stdout_lines}}"

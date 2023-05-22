@@ -1,0 +1,14 @@
+---
+- name: Check kernel version
+  hosts: pomall
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Check kernel version
+      shell: uname -r
+      register: result
+
+    - name: Print result
+      debug:
+        msg:
+        - "{{ result.stdout }}"

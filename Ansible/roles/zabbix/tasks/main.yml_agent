@@ -1,0 +1,42 @@
+---
+- name: Check os Name
+  shell: cat /etc/os-release | egrep ^NAME | awk -F "=" '{ print $2 }' | sed s/\"//g
+  register: os_name
+
+- name: Print os_name
+  debug:
+    msg:
+    - "{{ os_name.stdout }}"
+
+- name: Check os Version
+  shell: cat /etc/os-release | grep VERSION_ID | awk -F "=" '{ print $2 }' | sed s/\"//g
+  register: os_version
+
+- name: Print os_version
+  debug:
+    msg:
+    - "{{ os_version.stdout }}"
+
+- name: Install zabbix6.0 agent to Ubuntu18.04
+  import_tasks: agent_ubuntu_18.04.yml
+  when:
+    - os_name.stdout == "Ubuntu"
+    - os_version.stdout == "18.04"
+
+- name: Install zabbix6.0 agent to Ubuntu20.04
+  import_tasks: agent_ubuntu_20.04.yml
+  when:
+    - os_name.stdout == "Ubuntu"
+    - os_version.stdout == "20.04"
+
+- name: Install zabbix6.0 agent to Ubuntu22.04
+  import_tasks: agent_ubuntu_22.04.yml
+  when:
+    - os_name.stdout == "Ubuntu"
+    - os_version.stdout == "22.04"
+
+- name: Install zabbix6.0 agent to Centos7
+  import_tasks: agent_centos7.yml
+  when:
+    - os_name.stdout == "CentOS Linux"
+    - os_version.stdout == "7"

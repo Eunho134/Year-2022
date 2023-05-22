@@ -1,0 +1,22 @@
+---
+- name: Stop Web-mail service
+  hosts: poma-mail-was
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: Stop service
+      command:
+        cmd: |
+          ./stop.sh
+      args:
+        chdir: /CLOUD/tomcat9/server/web-mail/bin
+
+    - name: Check process status
+      shell: |
+        ps -ef | grep Dweb-mail | grep -v grep
+      register: result
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{result.stdout_lines}}"

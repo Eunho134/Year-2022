@@ -1,0 +1,28 @@
+zabbix_export:
+  version: '6.0'
+  date: '2023-05-04T01:58:38Z'
+  groups:
+    -
+      uuid: c27e7315cc1a462fa0580730141a379b
+      name: msp
+  templates:
+    -
+      uuid: b34b707f82d5479499133f5fd42fa529
+      template: msp_Windows
+      name: msp_Windows
+      templates:
+        -
+          name: 'Windows CPU by Zabbix agent'
+        -
+          name: 'Windows memory by Zabbix agent'
+        -
+          name: 'Windows network by Zabbix agent'
+      groups:
+        -
+          name: msp
+      items:
+        -
+          uuid: c6f17f05bc254d309968fb5c1c7a2c56
+          name: 'NHN 백업 서비스'
+          key: 'proc.num["avagent.exe"]'
+          history: 7d

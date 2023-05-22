@@ -1,0 +1,120 @@
+---
+- name: Create remote_path
+  file:
+    path: "{{ remote_path }}"
+    state: directory
+    mode: "0755"
+
+#- name: Remove lock file
+#  shell: 
+#    cmd: |
+#      rm -rf /var/lib/apt/lists/lock
+#      rm -rf /var/cache/apt/archives/lock
+#      rm -rf /var/lib/dpkg/lock*
+#      dpkg --configure -a
+#  register: lockfile
+#  ignore_errors: yes
+
+#- name: Print lockfile
+#  debug: 
+#    msg: 
+#    - "{{ lockfile.stdout }}"
+#  ignore_errors: yes
+
+- name: Update the System Packages
+  apt:
+    upgrade: yes
+    update_cache: yes
+
+- name: Install essential package
+  apt:
+    name:
+      - apt-transport-https
+      - curl
+    state: present
+
+- name: Copy Mariadb release key
+  copy:
+    src: "{{ local_path  }}/files/mariadb_release_signing_key.asc"
+    dest: "{{ gpg_path }}/mariadb_release_signing_key.asc"
+
+- name: Install Mariadb package
+  shell: |
+    sh -c "echo 'deb https://tw1.mirror.blendbyte.net/mariadb/repo/10.5/ubuntu bionic main' >>/etc/apt/sources.list"
+    rm -rf /var/lib/apt/lists/lock*
+  register: maria
+
+- name: Print maria result
+  debug: 
+    msg: 
+    - "{{maria.stdout_lines}}"
+
+- name: Copy zabbix package
+  copy:
+    src: "{{ local_path }}/files/zabbix-release_6.0-4+ubuntu22.04_all.deb"
+    dest: "{{ remote_path }}/zabbix-release_6.0-4+ubuntu22.04_all.deb"
+
+- name: Install zabbix package
+  shell: 
+    cmd: |        
+      dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
+  args:
+    chdir: "{{ remote_path }}"
+  register: package
+
+- name: Print package result
+  debug: 
+    msg: 
+    - "{{ package.stdout }}"
+
+- name: Update the System Packages
+  apt:
+    upgrade: yes
+    update_cache: yes
+
+- name: Install mariadb-server
+  apt:
+    name: mariadb-server
+    state: latest
+  notify: 
+  - Start mariadb service
+
+- name: Install Zabbix
+  apt:
+    pkg:
+      - zabbix-server-mysql
+      - zabbix-frontend-php
+      - zabbix-apache-conf
+      - zabbix-sql-scripts
+
+- name: Query mariadb to zabbix
+  shell: |
+    mysql -e "create database zabbix character set utf8mb4 collate utf8mb4_bin;"
+    mysql -e "create user zabbix@localhost identified by 'password';"
+    mysql -e "grant all privileges on zabbix.* to zabbix@localhost;"
+    mysql -e "set global log_bin_trust_function_creators = 1;"
+    zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -p'password' zabbix
+    mysql -e "set global log_bin_trust_function_creators = 0;"
+  register: mariadb
+
+- name: Print mariadb
+  debug: 
+    msg: 
+    - "{{mariadb.stdout_lines}}"
+
+- name: Install Apache2
+  apt:
+    name: apache2
+    state: latest
+  notify: 
+  - Start apache2 service
+  - Start zabbix-server service
+
+- name: Config DBPassword
+  replace:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: "# DBPassword="
+    replace: "DBPassword=password"
+  notify:
+  - Restart zabbix-server service
+  - Restart apache2 service

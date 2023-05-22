@@ -1,0 +1,9 @@
+---
+- hosts: nec
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: fetch Result log
+      fetch:
+        src: "/cron/Result.log"
+        dest: "/root/target"

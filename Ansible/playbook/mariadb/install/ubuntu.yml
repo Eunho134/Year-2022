@@ -1,0 +1,47 @@
+---
+- name: Install Mariadb10.5 to CentOS
+  hosts: target
+  gather_facts: false
+  vars:
+    LOCAL_PATH: /root/playbook/mariadb
+    REMOTE_PATH: /root
+  tasks:   
+    - name: Clean yum
+      command: yum clean all
+
+    - name: Again Update the System Packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+
+    - name: Copy Mariadb release key
+      copy:
+        src: "{{ local_path  }}/lib/mariadb_release_signing_key.asc"
+        dest: "{{ remote_path1 }}/mariadb_release_signing_key.asc"
+
+    - name: Install Mariadb package
+      shell: |
+        sh -c "echo 'deb https://tw1.mirror.blendbyte.net/mariadb/repo/10.5/ubuntu bionic main' >>/etc/apt/sources.list"
+        rm -rf /var/lib/apt/lists/lock*
+      register: maria
+
+    - name: Print maria result
+      debug: msg="{{maria.stdout_lines}}"
+
+    - name: Again Update the System Packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+
+    - name: Install mariadb10.5
+      apt:
+        name:
+          - MariaDB-server
+          - MariaDB-client
+        state: lastest
+
+    - name: Start the MariaDB service
+      systemd:
+        daemon_reload: true
+        name: mariadb
+        enabled: true

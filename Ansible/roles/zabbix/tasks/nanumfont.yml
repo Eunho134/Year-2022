@@ -1,0 +1,35 @@
+---
+- name: Create NanumFont Directory
+  file:
+    path: /usr/share/fonts/NanumFont
+    state: directory
+
+- name: Update the System Packages
+  apt:
+    upgrade: yes
+    update_cache: yes
+
+- name: Isntall unzip
+  apt:
+    name: unzip
+    state: latest
+  ignore_errors: yes
+
+- name: Unarchive Nanumfont.zip
+  unarchive:
+    src: "{{ local_path }}/files/NanumFont_TTF_ALL.zip"
+    dest: "/usr/share/fonts/NanumFont"
+
+
+- name: Remove ex-symbolic link 
+  shell:
+    cmd: |
+      mv /usr/share/fonts/NanumFont/NanumGothic.ttf /usr/share/zabbix/assets/fonts/graphfont.ttf
+  register: remove
+
+- name: Print remove result
+  debug:
+    msg:
+    - "{{ remove.stdout_lines }}" 
+  notify:
+    - Restart zabbix-server service 

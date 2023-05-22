@@ -1,0 +1,102 @@
+---
+- name: Start zabbix-server service
+  shell:
+    cmd: |
+      systemctl daemon-reload
+      systemctl enable zabbix-server
+      systemctl start zabbix-server
+
+- name: Stop zabbix-server service
+  shell:
+    cmd: |
+      systemctl stop zabbix-server
+
+- name: Restart zabbix-server service
+  shell:
+    cmd: |
+      systemctl restart zabbix-server
+
+- name: Start zabbix-agent service
+  shell:
+    cmd: |
+      systemctl daemon-reload
+      systemctl enable zabbix-agent
+      systemctl start zabbix-agent
+
+- name: Stop zabbix-agent service
+  shell:
+    cmd: |
+      systemctl stop zabbix-agent
+
+- name: Restart zabbix-agent service
+  shell:
+    cmd: |
+      systemctl restart zabbix-agent
+
+- name: Start apache2 service
+  shell:
+    cmd: |
+      systemctl daemon-reload
+      systemctl enable apache2
+      systemctl start apache2
+
+- name: Stop apache2 service
+  shell:
+    cmd: |
+      systemctl stop apache2
+
+- name: Restart apache2 service
+  shell:
+    cmd: |
+      systemctl restart apache2
+
+- name: Start mariadb service
+  shell:
+    cmd: |
+      systemctl daemon-reload
+      systemctl enable mariadb
+      systemctl start mariadb
+
+- name: Stop mariadb service
+  shell:
+    cmd: |
+      systemctl stop mariadb
+
+- name: Restart mariadb service
+  shell:
+    cmd: |
+      systemctl restart mariadb
+
+- name: Start httpd service
+  shell:
+    cmd: |
+      systemctl daemon-reload
+      systemctl enable httpd
+      systemctl start httpd
+
+- name: Stop httpd service
+  shell:
+    cmd: |
+      systemctl stop httpd
+
+- name: Restart httpd service
+  shell:
+    cmd: |
+      systemctl restart httpd
+
+- name: Start rh-php72-php-fpm service
+  shell:
+    cmd: |
+      systemctl daemon-reload
+      systemctl enable rh-php72-php-fpm
+      systemctl start rh-php72-php-fpm
+
+- name: Stop rh-php72-php-fpm service
+  shell:
+    cmd: |
+      systemctl stop rh-php72-php-fpm
+
+- name: Restart rh-php72-php-fpm service
+  shell:
+    cmd: |
+      systemctl restart rh-php72-php-fpm

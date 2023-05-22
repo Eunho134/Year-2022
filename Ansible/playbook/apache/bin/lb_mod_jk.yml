@@ -1,0 +1,49 @@
+---
+- name: mod_jk configuration
+  hosts: target
+  gather_facts: false
+  vars:
+    LOCAL_PATH: "/playbook/apache/"
+    REMOTE_PATH: "/usr/local/apache"
+    TOMCAT1_PORT: "9081"
+    TOMCAT1_IP: "192.168.xx.10"
+    TOMCAT2_PORT: "9082"
+    TOMCAT2_IP: "192.168.xx.11"
+  tasks:
+    - name: Copy connector.tar.gz file
+      unarchive:
+        src: "{{ LOCAL_PATH }}/lib/tomcat-connectors-1.2.48-src.tar.gz"
+        dest: "/usr/local"
+
+    - name: Create conf.d directory
+      file:
+        path: "{{ REMOTE_PATH }}/conf.d"
+        state: directory
+
+    - name: Install modjk connector equipment
+      shell:
+        cmd: |
+          ./buildconf.sh
+          ./configure --with-apxs=/bin/apxs
+          make && make install
+      args:
+        chdir: /usr/local/tomcat-connectors-1.2.48-src/native
+
+    - name: Copy mod jk conf file
+      copy:
+        src: "{{ items.src }}"
+        dest: "{{ items.dest }}"
+      with_items:
+        - { src: "{{ LOCAL_PATH }}/conf/httpd-jk.conf", dest: "{{ REMOTE_PATH }}/conf.d/httpd-jk.conf" }
+        - { src: "{{ LOCAL_PATH }}/conf/workers.properties", dest: "{{ REMOTE_PATH }}/conf.d/workers.properties" }
+        - { src: "{{ LOCAL_PATH }}/conf/urlworkermap.properties", dest: "{{ REMOTE_PATH }}/conf.d/urlworkermap.properties" }
+
+    - name: Configuration workers.properties file
+      lineinfile:
+        regexp: "{{ items.regexp }}"
+        line: "{{ items.line }}"
+      wiht_items:
+        - { regexp: "AJP_PORT1", line: 'worker.instance1.port="{{ TOMCAT1_PORT }}"' }
+        - { regexp: "AJP_TOMCAT1_IP", line: 'worker.instance1.host="{{ TOMCAT1_IP }}"' }
+        - { regexp: "AJP_PORT2", line: 'worker.instance2.port="{{ TOMCAT2_PORT }}"' }
+        - { regexp: "AJP_TOMCAT2_IP", line: 'worker.instance1.host="{{ TOMCAT2_IP }}"' }

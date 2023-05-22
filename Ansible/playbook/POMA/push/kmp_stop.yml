@@ -1,0 +1,25 @@
+---
+- name: KaKao Alarm service Stop
+  hosts: poma-push
+  vars:
+    ansible_become_user: apache
+    ansible_become_method: su
+    ansible_pass: "tltjfeks1!"
+  gather_facts: false
+  tasks:
+    - name: Stop service
+      command: 
+        cmd: |
+          ./kmp_stop
+      args:
+        chdir: /CLOUD/kmp_client/kmp_client_1.8.8/script
+
+    - name: Check process
+      shell: |
+        ps -ef | grep kmp_client | grep -v vi | grep -v grep | grep -v sh
+      resgister: kmp
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{kmp.stdout_lines}}"

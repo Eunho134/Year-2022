@@ -1,0 +1,41 @@
+---
+- name: Start RPA service
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Start first service
+      expect:
+        command:
+          cmd: ./mysql-start.sh
+        args:
+          chdir: /data/rpa/bin
+        responses:
+          Enter password: "rpago!23"
+
+   - name: Start second service
+      command:
+        cmd: |
+          ./tomcat-stop.sh
+          ./stop.sh
+          ./activemq-stop.sh
+      args:
+        chdir: /data/rpa/bin
+
+    - name: Check rpa status
+      command:
+        cmd: |
+          ./ps-rpa.sh
+      args:
+        chdir: /data/rpa/bin
+
+    - name: Check process status
+      shell: |
+        ps -ef | grep tomcat
+        ps -ef | grep activemq
+        ps -ef | grep mariadb
+      register: process
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{process.stdout_lines}}"

@@ -1,0 +1,8 @@
+---
+remote_path: "/"
+local_path: "~/.ansible/roles/zabbix"
+gpg_path: "/etc/apt/trusted.gpg.d"
+
+zabbix_server_ip: 127.0.0.1
+zabbix_agent_log_path: "/var/log/zabbix/log"
+

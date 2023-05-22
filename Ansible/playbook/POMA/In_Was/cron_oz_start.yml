@@ -1,0 +1,25 @@
+---
+- name: OZ Report8.0 Schedule tomcat start
+  gather_facts: false
+  hosts: poma-in-was
+  become: yes
+  tasks:
+    - name: Start tomcat
+      vars:
+        ansible_become_user: tomcat
+        ansible_become_method: su
+      command:
+        cmd: |
+          ./oz_start.sh
+      args:
+        chdir: /data/app/webapps/ozsch80/bin
+
+    - name: Check process status
+      shell: |
+        ps -ef | grep ozsfw80 | grep -v grep
+      register: oz
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{oz.stdout_lines}}"

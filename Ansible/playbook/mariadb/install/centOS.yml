@@ -1,0 +1,41 @@
+---
+- name: Install Mariadb10.5 to CentOS
+  hosts: target
+  gather_facts: false
+  vars:
+    LOCAL_PATH:
+    REMOTE_PATH:
+  tasks:   
+    - name: Clean yum
+      command: yum clean all
+
+    - name: Again Update the System Packages
+      yum:
+        name: "*"
+        state: latest
+        update_cache: yes
+
+    - name: Create mariadb repo directory
+      file:
+        path: /etc/yum.repos.d
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy mariadb10.5 repo
+      copy:
+        src: /etc/yum.repos.d/MariaDB.repo
+        dest: /etc/yum.repos.d/MariaDB.repo
+
+    - name: Install mariadb10.5
+      yum:
+        name:
+          - MariaDB-server
+          - MariaDB-client
+        state: present
+
+    - name: Start the MariaDB service
+      systemd:
+        daemon_reload: true
+        name: mariadb
+        enabled: true

@@ -1,0 +1,12 @@
+---
+- hosts: target
+  name: fetch file
+  gather_facts: false
+  vars:
+    local_path: /root/playbook/tomcat/8.5/conf
+    remote_path: /usr/local/tomcat8/conf
+  tasks:
+    - name: fetch file
+      fetch:
+        src: "{{ remote_path }}/server.xml"
+        dest: "{{ local_path }}"

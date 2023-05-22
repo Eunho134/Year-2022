@@ -1,0 +1,25 @@
+---
+- name: Stop tibero6 process
+  hosts: pwcf-db
+  gether_facts: false
+  become: yes
+  tasts:
+    - name: Stop tibero6
+      vars:
+        ansible_become_user: tibero
+        ansible_become_method: su
+      command:
+        cmd: |
+          tbboot
+      args:
+        chdir: /CLOUD/tibero/bin
+
+    - name: Check tibero process
+      shell: |
+        ps -ef | grep tibero
+      register: tibero
+
+    - name: Print tibero status
+      debug: 
+        msg: 
+          - "{{tibero.stdout_lines}}"

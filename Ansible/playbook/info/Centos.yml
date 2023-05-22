@@ -1,0 +1,24 @@
+---
+- name: Centso os info
+  hosts: all
+  tasks:
+    - name: OS Description
+      shell: lsb_release -a
+      register: description
+    - name: print description
+      debug: msg="{{description.stdout_lines}}"
+    - name: CPU infomation
+      shell: lscpu
+      register: cpuinfo
+    - name: print cpuinfo
+      debug: msg="{{cpuinfo.stdout_lines}}"
+    - name: RAN infomation
+      shell: free -h
+      register: meminfo
+    - name: print meminfo
+      debug: msg="{{meminfo.stdout_lines}}"
+    - name: Disk infomation
+      shell: df -h
+      register: diskinfo
+    - name: print diskinfo
+      debug: msg="{{diskinfo.stdout_lines}}"

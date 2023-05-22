@@ -1,0 +1,14 @@
+---
+- hosts: nec
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Remove 01.ntp_check.sh
+      file:
+        state: absent
+        path: /cron/inspect_cron/01.ntp_check.sh
+
+    - name: Change 01.ntp_check.sh
+      copy:
+        src: /root/inspect_cron/01.ntp_check.sh
+        dest: /cron/inspect_cron/01.ntp_check.sh

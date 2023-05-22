@@ -1,0 +1,169 @@
+---
+- name: Install Owncloud to centos7.9 usging ansible
+  hosts: target
+  gather_facts: false
+  vars:
+    local_path: /root/playbook/owncloud
+    remote_path: /
+  tasks:
+    - name: Update system package and upgrade
+      yum:
+        name: "*"
+        state: latest
+        update_cache: yes
+
+    - name: Permissive selinux
+      selinux:
+        policy: targeted
+        state: permissive
+
+    - name: Create mariadb repo directory
+      file:
+        path: /etc/yum.repos.d
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy mariadb10.5 repo
+      copy:
+        src: /etc/yum.repos.d/MariaDB.repo
+        dest: /etc/yum.repos.d/MariaDB.repo
+        mode: '0755'
+
+    - name: Install mariadb10.5
+      yum:
+        name:
+          - MariaDB-server
+          - MariaDB-client
+
+    - name: Remove php
+      yum:
+        name: php*
+        state: absent
+
+    - name: Install yum-utils
+      yum:
+        name: 
+          - epel-release 
+          - yum-utils
+        state: present
+
+    - name: Copy php7.3 repo
+      copy:
+        src: "{{ local_path }}/repo.file/remi-release-7.rpm"
+        dest: "{{ remote_path }}/remi-release-7.rpm"
+
+    - name: Establish php7.3 repo
+      shell: |
+        yum localinstall -y remi-release-7.rpm
+        yum-config-manager --enable remi-php73
+      register: php
+
+    - name: Print php7.3 result
+      debug: msg="{{php.stdout_lines}}"
+
+    - name: Update system package
+      yum:
+        name: "*"
+        state: latest
+        update_cache: yes
+
+    - name: Install php7.3
+      yum:
+        name:
+          - php 
+          - php-common 
+          - php-opcache 
+          - php-mcrypt 
+          - php-cli 
+          - php-gd 
+          - php-curl 
+          - php-mysqlnd
+
+    - name: Install php module
+      yum:
+        name:
+          - php*-zip  
+          - php-xml 
+          - php-intl  
+          - php-mbstring
+          - httpd
+
+    - name: Started Apache httpd2.4
+      systemd:
+        name: httpd
+        state: started
+        enabled: true
+
+    - name: Change http port5050
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: "Listen 80"
+        line: "Listen 5050"
+
+    - name: Restarted Apache httpd2.4
+      systemd:
+        name: httpd
+        state: restarted
+        enabled: true
+
+    - name: Started Mariadb10.5
+      systemd:
+        name: mariadb
+        state: started
+        enabled: true
+
+    - name: Create Databases and User
+      shell: |
+        mysql -e "CREATE DATABASE owncloud_db;"
+        mysql -e "GRANT ALL ON owncloud_db.* TO 'owncloud_user'@'localhost' IDENTIFIED BY 'password';"
+        mysql -e "FLUSH PRIVILEGES;"
+      register: mariadb
+
+    - name: Print mariadb
+      debug: msg="{{mariadb.stdout_lines}}"
+
+    - name: Install unzip
+      yum:
+        name: unzip
+        state: present
+
+    - name: Copy owncloud zip file
+      copy:
+        src: "{{ local_path }}/zip.file/owncloud-10.11.0.zip"
+        dest: "{{ remote_path }}var/www/owncloud-10.11.0.zip"
+
+    - name: Unzip owncloud install file
+      command:
+        cmd: unzip owncloud-10.11.0.zip
+      args:
+        chdir: /var/www/
+        creates: /var/www/
+
+    - name: Change mode directory
+      shell: |
+        chown -R www-data:www-data /var/www/owncloud/
+        chmod -R 755 /var/www/owncloud/
+      register: changemode
+
+    - name: Print change mode
+      debug: msg="{{changemode.stdout_lines}}"
+
+    - name: Touch owncloud.conf file
+      file:
+        path: "/etc/httpd/conf.d/owncloud.conf"
+        state: touch
+
+    - name: Copy Owncloud conf file
+      copy:
+        src: "{{ local_path }}/conf.file/ownCloud.conf"
+        dest: "/etc/httpd/conf.d/owncloud.conf"
+
+    - name: Restart Aapche httpd service
+      systemd:
+        name: httpd
+        state: restarted
+        daemon_reload: true
+        enabled: true
+
+

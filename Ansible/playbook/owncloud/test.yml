@@ -1,0 +1,24 @@
+---
+- name: Install Owncloud to centos7.9 usging ansible
+  hosts: target
+  gather_facts: false
+  vars:
+    local_path: /root/playbook/owncloud
+    remote_path: /var/www
+  tasks:
+    - name: Install unzip
+      yum:
+        name: unzip
+        state: present
+      
+    - name: Copy owncloud zip file
+      copy:
+        src: "{{ local_path }}/zip.file/owncloud-10.11.0.zip"
+        dest: "{{ remote_path }}/owncloud-10.11.0.zip"
+
+    - name: Unarchive owncloud zip file
+      command:
+        cmd: unzip owncloud-10.11.0.zip
+      args:
+        chdir: /var/www/
+

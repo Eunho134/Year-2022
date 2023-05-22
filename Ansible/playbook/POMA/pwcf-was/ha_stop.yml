@@ -1,0 +1,23 @@
+---
+- name: Stop haproxy service
+  hosts: pwcf-was
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Stop service
+      vars:
+        ansible_become_user: tomcat
+        ansible_become_method: su
+      command:
+        cmd: |
+          ./stop_haproxy.sh
+      args:
+        chdir: /CLOUD/linkSW/haproxy/bin
+
+    - name: Check process
+      shell: |
+        ps -ef | grep haproxy | grep -v grep
+      register: ha
+
+    - name: Print result
+      debug: msg="{{ha.stdout_lines}}"

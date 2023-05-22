@@ -1,0 +1,13 @@
+---
+- hosts: target
+  gather_facts: false
+  vars:
+    worker: "mspuser"
+    workerpassword: "password"
+  become: yes
+  tasks:
+    - name: Renewal User with password
+      user:
+        name: "{{ worker }}"
+        state: present
+        password: "{{ workerpassword | password_hash('sha512') }}"

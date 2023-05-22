@@ -1,0 +1,24 @@
+---
+- name: NHN backup agent stop
+  hosts: pom
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Stop NHN agent
+      shell: |
+        /usr/openv/netbackup/bin/goodies/netbackup stop
+        /usr/openv/netbackup/bin/bp.kill_all
+      register: result
+
+    - name: Print result
+      debug: msg="{{result.stdout_lines}}"
+
+    - name: Check process status
+      shell: |
+        ps -ef | grep openv | grep -v grep
+      register: process
+
+    - name: Print process status
+      debug: 
+        msg: 
+          - "{{process.stdout_lines}}"

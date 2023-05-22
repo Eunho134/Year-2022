@@ -1,0 +1,8 @@
+---
+- hosts: target
+  tasks:
+  - name: version check
+    shell: apache2 -v
+    register: version
+  - name: print version
+    debug: msg="{{version.stdout_lines}}"

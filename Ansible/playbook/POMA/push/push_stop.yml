@@ -1,0 +1,25 @@
+---
+- name: Apache httpd Stop service
+  hosts: poma-push
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Stop service
+      vars:
+        ansible_become_user: tomcat
+        ansible_become_method: su
+      command: 
+        cmd: |
+          ./stop.sh
+      args:
+        chdir: /CLOUD/tomcat9/server/poma_pus_ex/bin
+
+    - name: Check process
+      shell: |
+        ps -ef | grep tomcat | grep pus_ex
+      resgister: tomcat
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{tomcat.stdout_lines}}"

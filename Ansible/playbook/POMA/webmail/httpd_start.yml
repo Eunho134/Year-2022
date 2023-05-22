@@ -1,0 +1,25 @@
+---
+- name: Start Apache httpd Web-mail service
+  hosts: poma-mail-web
+  vars:
+    ansible_become_user: apache
+    ansible_become_method: su
+    ansible_become_pass: "tltjfeks1!"
+  gather_facts: false
+  tasks:
+    - name: Start web service
+      command:
+        cmd: |
+          ./apache_start.sh
+      args:
+        chdir: /home/apache
+
+    - name: Check process
+      shell: |
+        pa -ef | grep sniper | grep -v grep
+      register: httpd
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{httpd.stdout_lines}}"

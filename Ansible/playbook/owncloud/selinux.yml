@@ -1,0 +1,9 @@
+---
+- name: Permissive Selinux
+  hosts: target
+  gather_facts: false
+  tasks:
+    - name: Excute selinux permissive
+      selinux:
+        policy: targeted
+        state: permissive

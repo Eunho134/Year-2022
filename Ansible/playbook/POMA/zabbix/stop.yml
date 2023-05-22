@@ -1,0 +1,20 @@
+---
+- name: Zabbix agent stop
+  hosts: pom
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Stop agent
+      systemd:
+        name: zabbix-agent2
+        status: stopped
+
+    - name: Check process status
+      shell: |
+        systemctl status zabbix-agent2
+      register: status
+
+    - name: Print status
+      debug: 
+        msg: 
+          - "{{status.stdout_lines}}"

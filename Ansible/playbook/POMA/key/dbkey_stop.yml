@@ -1,0 +1,25 @@
+---
+- name: Stop Xecuredb2.7.05.01 service
+  hosts: com-dbmgt
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: Stop service
+      vars:
+        ansible_become_user: xecuredb
+        ansible_become_method: su
+      command:
+        cmd: |
+          ./XDServer -q
+      args:
+        chdir: /CLOUD/xecuredb/server/bin
+
+    - name: Check process
+      shell: |
+        ps -ef | grep XDS
+      resgister: xecure
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{xecure.stdout_lines}}"

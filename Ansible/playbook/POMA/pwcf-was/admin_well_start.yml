@@ -1,0 +1,25 @@
+---
+- name: Start Wellife Portal admin service
+  hosts: pwcf-was
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Start service
+      vars:
+        ansible_become_user: tomcat
+        ansible_become_method: su
+      command:
+        cmd: |
+          ./start.sh
+      args:
+        chdir: /CLOUD/tomcat9/server/wellife-admin/bin
+
+    - name: Check process
+      shell: |
+        ps -ef | grep tomcat | grep wellife-admin
+      register: weladmin
+
+    - name: Print result
+      debug: 
+        msg: 
+          - "{{weladmin.stdout_lines}}"

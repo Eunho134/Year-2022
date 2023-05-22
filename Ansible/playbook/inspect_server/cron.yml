@@ -1,0 +1,25 @@
+---
+- hosts: target
+  remote_user: root
+  become: true
+  gather_facts: false
+
+  tasks:
+  - name: Create directory
+    file:
+      path: /cloit/
+      state: directory
+  - name: Download inspect script
+    copy:
+      src: /root/inspect_cron
+      dest: /cloit/
+  - name: Cron config
+    cron:
+      name : Server Inspecting
+      job: sh /cloit/inspect_cron/Server_Check.sh > /cloit/inspect_cron/Result.log
+      user: root
+      weekday: "*"
+      month: "*"
+      day: "*"
+      hour: "*"
+      minute: "*/5"

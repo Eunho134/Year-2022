@@ -1,0 +1,23 @@
+---
+- name: SPIDERagtX stop
+  hosts: pom
+  become: yes
+  gather_facts: false
+  tskts:
+    - name: Stop agent
+      commnad: 
+        cmd: |
+          ./xmon start
+          ./xagent start
+      args:
+        chdir: /opt/SPIDERagtX
+
+    - name: Check agent status
+      shell: |
+        ps -ef | grep SPIDERagtX | grep -v grep 
+      register: status
+
+    - name: Print status
+      debug: 
+        msg: 
+          - "{{status.stdout_lines}}"

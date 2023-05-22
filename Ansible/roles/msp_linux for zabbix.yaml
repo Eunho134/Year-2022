@@ -1,0 +1,33 @@
+zabbix_export:
+  version: '6.0'
+  date: '2023-05-04T01:51:19Z'
+  groups:
+    -
+      uuid: c27e7315cc1a462fa0580730141a379b
+      name: msp
+  templates:
+    -
+      uuid: 3a9427bb443247fb9c183fdb232377a0
+      template: msp_Linux
+      name: msp_Linux
+      templates:
+        -
+          name: 'Linux CPU by Zabbix agent'
+        -
+          name: 'Linux memory by Zabbix agent'
+      groups:
+        -
+          name: msp
+      items:
+        -
+          uuid: b990225c574c4bfaba3588510add2b39
+          name: 'eth0 received'
+          key: 'net.if.in[eth0]'
+          history: 7d
+          units: bps
+        -
+          uuid: 5e1fb20463894c8981674f8fdd09d538
+          name: 'eth0 sent'
+          key: 'net.if.out[eth0]'
+          history: 7d
+          units: bps

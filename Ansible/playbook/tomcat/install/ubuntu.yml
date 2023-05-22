@@ -1,0 +1,107 @@
+---
+- name: Install Apache Tomcat8.5 using ansible
+  hosts: target
+  vars:
+    LOCAL_PATH: /root/playbook/tomcat/
+    REMOTE_PATH: /usr/local
+  tasks:
+    - name: Remove lock file
+      shell: |
+        rm -rf /var/lib/dpkg/lock*
+        rm -rf /var/cache/apt/archives/lock*
+      register: lockfile
+
+    - name: Print lockfile
+      debug: msg="{{lockfile.stdout_lines}}"  
+      
+    - name: Update the System Packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+
+    - name: stop ufw service
+      systemd:
+        name: ufw
+        state: stopped
+        enabled: false
+
+    - name: disable ufw service
+      shell: |
+        ufw disable
+      args:
+        executable: /bin/bash
+
+    - name: Install JAVA
+      apt:
+        name: openjdk-8-jdk
+        state: latest
+
+    - name: JAVA PATH
+      lineinfile:
+        path: /etc/profile
+        state: present
+        line: "{{ item }}"
+      with_items:
+      - "JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64"
+      - "CATALINA_HOME=/usr/local/tomcat8"
+      - "CLASSPATH=$JAVA_HOME/jre/lib:$JAVA_HOME/lib/tools.jar:$CATALINA_HOME/lib-jsp-api.jar:$CATALINA_HOME/lib/servlet-api.jar"
+      - "PATH=$PATH:$JAVA_HOME/bin:/bin:/sbin"
+      - "export JAVA_HOME PATH CLASSPATH CATALINA_HOME"    
+
+    - name: Source JAVA PATH
+      shell: source /etc/profile
+      args:
+        executable: /bin/bash
+
+    - name: Copy tomcat8.5.tar.gz
+      unarchive:
+        src: "{{ LOCAL_PATH }}/lib/apache-tomcat-8.5.87.tar.gz"
+        dest: "{{ REMOTE_PATH }}"
+
+    - name: Move tomcat Path
+      shell: |
+        mv /usr/local/apache-tomcat-8.5.87 /usr/local/tomcat
+      register: tomcat_path
+
+    - name: Print tomcat_path
+      debug: msg="{{tomcat_path.stdout_lines}}"
+
+    - name: Add tomcat group
+      group:
+        name: tomcat
+        state: present
+
+    - name: Add tomcat user
+      user:
+        name: tomcat
+        groups: tomcat
+        shell: /sbin/nologin
+        home: /user/local/tomcat
+        state: present
+
+    - name: Change mode
+      shell: |
+        chown -R tomcat:tomcat /usr/local/tomcat
+        chmod +x /usr/local/tomcat/bin/*.sh
+      register: tomcat
+
+    - name: Print tomcat result
+      debug: msg="{{tomcat.stdout_lines}}"
+
+    - name: Delete tomcat.tar.gz file
+      file:
+        path: "{{ REMOTE_PATH }}/apache-tomcat-8.5.87.tar.gz"
+        state: absent
+
+    - name: Copy Tomcat service from local to remote
+      copy:
+        src: "{{ LOCAL_PATH }}/conf/tomcat.service"
+        dest: /etc/systemd/system/
+        mode: 0755
+
+    - name: Start and Enable Tomcat8.5 on Server
+      systemd:
+        name: tomcat
+        state: started
+        daemon_reload: true
+        enabled: true

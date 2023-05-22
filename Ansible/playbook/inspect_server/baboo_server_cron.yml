@@ -1,0 +1,39 @@
+---
+- hosts: baboo
+  become: yes
+  gather_facts: false
+  tasks:
+  - name: Create cron directory
+    file:
+      path: "/cron"
+      state: directory
+      owner: root
+      group: root
+      mode: '0755'
+    ignore_errors: yes
+
+  - name: Create sys directory
+    file:
+      path: "/cron/sys"
+      state: directory
+      owner: root
+      group: root
+      mode: '0755'
+    ignore_errors: yes
+
+  - name: Anarchive inspect script
+    unarchive:
+      src: /root/inspect_cron.tar.gz
+      dest: /cron/
+
+  - name: Scheduling script
+    cron:
+      name : Server Inspecting
+      job: sh /cron/inspect_cron/Server_Check.sh > /cron/Result.log 2>/dev/null
+      user: root
+      weekday: "*"
+      month: "*"
+      day: "*"
+      hour: "*"
+      minute: "*/5"
+

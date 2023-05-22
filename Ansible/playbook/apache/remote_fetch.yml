@@ -1,0 +1,12 @@
+---
+- hosts: target
+  name: fetch file
+  gather_facts: false
+  vars:
+    local_path: /root/playbook/apache/conf
+    remote_path: /usr/local/apache/conf
+  tasks:
+    - name: fetch file
+      fetch:
+        src: "{{ remote_path }}/httpd.conf"
+        dest: "{{ local_path }}"

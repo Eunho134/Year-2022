@@ -1,0 +1,15 @@
+---
+- hosts: pomall
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: Start zabbix-agent2 service
+      shell:
+        cmd: |
+          systemctl start zabbix-agent2
+      register: zabbix2
+
+    - name: Print zabbix2 serivce
+      debug:
+        msg:
+          - "{{ zabbix2.stdout }}"
