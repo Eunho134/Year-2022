@@ -1,0 +1,105 @@
+---
+- hosts: dbtapp01
+  gather_facts: false
+  vars:
+    LOCAL_SSL_DIR: "/home/ubuntu/cert_202308"
+    REMOTE_SSL_DIR: "/home/nec01/ssl_cert"
+    SSLCertificateFile: "www_debates_go_kr.crt"
+    SSLCACertificateFile: "AAACertificateServices.crt"
+    SSLCertificateKeyFile: "www_debates_go_kr_SHA256WITHRSA.key"
+    SSLCertificateChainFile: "rsa-dv.chain-bundle.pem"
+    Apache_HTTPD_PATH: "/usr/local/apache"
+    Backup_PATH: "/home/nec01/ssl_bak"
+  become: yes
+  tasks:
+    - name: Create SSL_DIR
+      file:
+        path: "{{ REMOTE_SSL_DIR }}"
+        state: directory
+
+    - name: Create Backup_PATH
+      file:
+        path: "{{ Backup_PATH }}"
+        state: directroy
+
+    - name: Copy LOCAL_SSL_DIR to REMOTE_SSL_DIR
+      copy:
+        src: "{{ LOCAL_SSL_DIR }}"
+        dest: "{{ REMOTE_SSL_DIR }}"
+
+
+
+    - name: Check SSLCertificateFile Path
+      shell: cat "{{ Apache_HTTPD_PATH }}/conf/extra/httpd-ssl.conf" | grep -ve "#" | grep -i "SSLCertificateFile" | cut -c 20-
+      register: file
+
+    - name: Print SSLCertificateFile Path
+      debug:
+        msg:
+        - "{{ file.stdout }}"
+
+    - name: Backup Original SSLCertificateFile
+      shell: cp "{{ file.stdout }}" "{{ Backup_PATH }}"
+
+    - name: Change SSLCertificateFile
+      shell: \cp -f "{{ REMOTE_SSL_DIR }}/{{ SSLCertificateFile }}" "{{ file.stdout }}"
+
+
+
+    - name: Check SSLCACertificateFile Path
+      shell: cat "{{ Apache_HTTPD_PATH }}/conf/extra/httpd-ssl.conf" | grep -ve "#" | grep -i "SSLCACertificateFile" | cut -c 22-
+      register: ca_file
+
+    - name: Print SSLCACertificateFile Path
+      debug:
+        msg:
+        - "{{ ca_file.stdout }}"
+
+    - name: Backup Original SSLCACertificateFile
+      shell: cp "{{ ca_file.stdout }}" "{{ Backup_PATH }}"
+
+    - name: Change SSLCACertificateFile
+      shell: \cp -f "{{ REMOTE_SSL_DIR }}/{{ SSLCACertificateFile }}" "{{ ca_file.stdout }}"
+
+
+    - name: Check SSLCertificateKeyFile Path
+      shell: cat "{{ Apache_HTTPD_PATH }}/conf/extra/httpd-ssl.conf" | grep -ve "#" | grep -i "SSLCertificateKeyFile" | cut -c 23-
+      register: key_file
+
+    - name: Print SSLCertificateKeyFile Path
+      debug:
+        msg:
+        - "{{ key_file.stdout }}"
+
+    - name: Backup Original SSLCertificateKeyFile
+      shell: cp "{{ key_file.stdout }}" "{{ Backup_PATH }}"
+
+    - name: Change SSLCACertificateFile
+      shell: \cp -f "{{ REMOTE_SSL_DIR }}/{{ SSLCertificateKeyFile }}" "{{ key_file.stdout }}"
+
+
+    - name: Check SSLCertificateChainFile Path
+      shell: cat "{{ Apache_HTTPD_PATH }}/conf/extra/httpd-ssl.conf" | grep -ve "#" | grep -i "SSLCertificateChainFile" | cut -c 25-
+      register: chain_file
+
+    - name: Print SSLCertificateChainFile Path
+      debug:
+        msg:
+        - "{{ chain_file.stdout }}"
+
+    - name: Backup Original SSLCertificateChainFile
+      shell: cp "{{ chain_file.stdout }}" "{{ Backup_PATH }}"
+
+    - name: Change SSLCertificateChainFile
+      shell: \cp -f "{{ REMOTE_SSL_DIR }}/{{ SSLCertificateChainFile }}" "{{ chain_file.stdout }}"
+
+
+    - name: Restart HTTPD GraceFull
+      shell: sh "{{ Apache_HTTPD_PATH }}/bin/httpd" -k graceful
+      register: restart
+
+    - name: Print restart apache
+      debug:
+        msg:
+        - "{{ restart.stdout }}"
+
